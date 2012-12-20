@@ -42,8 +42,8 @@ define('shim',[],function() {
         });
     }
 }});
-
 define('as3/trace',["shim!Array.prototype.map"], function() {
+  
   return function trace() {
     var msg = Array.prototype.map.call(arguments, String).join(" ");
     var logWindow = document.createElement("div");
@@ -52,8 +52,8 @@ define('as3/trace',["shim!Array.prototype.map"], function() {
   }
 });
 
-
 define('as3/is',[],function() {
+  
   return function is(object, type) {
     return !!type && object !== undefined && object !== null &&
       // constructor or instanceof may return false negatives:
@@ -153,11 +153,23 @@ define('runtime/defineClass',["shims!Object!create", "shim!Array.prototype.forEa
   function toString() {
     return "[Class " + this.name + "]";
   }
+  function convertShortcuts(propertyDescriptors) {
+    var result = {};
+    if (propertyDescriptors) {
+      for (var name in propertyDescriptors) {
+        var propertyDescriptor = propertyDescriptors[name];
+        result[name] = typeof propertyDescriptor === "object" ? propertyDescriptor :
+          // anything *not* an object is a shortcut for the value (non-writable, non-enumerable, non-configurable):
+        { value: propertyDescriptor };
+      }
+    }
+    return result;
+  }
   return function(clazz, config) {
     var extends_ = config.extends_ || Object;
     var implements_ = config.implements_ ? typeof config.implements_ === "function" ? [config.implements_] : config.implements_ : [];
-    var members = config.members || {};
-    var staticMembers = config.staticMembers || {};
+    var members = convertShortcuts(config.members);
+    var staticMembers = convertShortcuts(config.staticMembers);
     var staticInitializers = config.staticInitializers || {};
     var staticCode = config.staticCode;
     Object.defineProperty(clazz, "$$", {
@@ -215,8 +227,8 @@ define('classes/com/acme/I',["runtime/defineInterface"], function(defineInterfac
   return defineInterface("com.acme.I", []);
 });
 
-
 define('as3/bind',["shims!Object!create", "shim!Function.prototype.bind"], function() {
+  
   return function(object, method, boundMethodName) {
     var boundMethod = object[boundMethodName];
     if (!boundMethod) {
@@ -259,23 +271,23 @@ define('classes/com/acme/A',["runtime/defineClass", "./I", "as3/trace", "as3/bin
       },
 
       // public method:
-      foo: { value: function foo(x) {
+      foo: function foo(x) {
 /*25*/    return secret.call(this, A.bar(x)); // rewritten private method call
-      }},
+      },
 
       // public method:
-      baz: { value: function baz() {
+      baz: function baz() {
 /*29*/    var tmp = bind_(this, secret, "secret$1"); // rewritten method access w/o invocation
 /*30*/    return tmp("-bound");
-      }}
+      }
     },
 
     staticMembers: {
       // public static method:
-      bar: { value: function bar(x) {
+      bar: function bar(x) {
           A.$$ && A.$$(); // execute static code once on first usage
 /*34*/    return x + 1;
-      }}
+      }
     },
 
     staticCode: function() {
@@ -313,17 +325,17 @@ define('classes/com/acme/B',["runtime/defineClass", "as3/trace", "./A", "./sub/I
       count:  { value: 0, writable: true },
 
       // public method (overriding):
-      foo: { value: function foo(x) {
+      foo: function foo(x) {
 /*22*/    return A.prototype.foo.call(this, x + 2) + "-sub"; // rewritten super method call
-      }}
+      }
     },
 
     staticMembers: {
       // public static method:
-      nowPlusOne: { value: function nowPlusOne() {
+      nowPlusOne: function nowPlusOne() {
           B.$$ && B.$$(); // ensure class is initialized
 /* 8*/    return new Date(B.now.getTime() + 60*60*1000);
-      }},
+      },
 
       // public static field:
       now: { value: null, writable: true }
