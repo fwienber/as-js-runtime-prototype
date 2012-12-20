@@ -3,11 +3,23 @@ define(["shims!Object!create", "shim!Array.prototype.forEach"], function() {
   function toString() {
     return "[Class " + this.name + "]";
   }
+  function convertShortcuts(propertyDescriptors) {
+    var result = {};
+    if (propertyDescriptors) {
+      for (var name in propertyDescriptors) {
+        var propertyDescriptor = propertyDescriptors[name];
+        result[name] = propertyDescriptor !== null && typeof propertyDescriptor === "object" ? propertyDescriptor
+          // anything *not* an object is a shortcut for a property descriptor with that value (non-writable, non-enumerable, non-configurable):
+                : { value: propertyDescriptor };
+      }
+    }
+    return result;
+  }
   return function(clazz, config) {
     var extends_ = config.extends_ || Object;
     var implements_ = config.implements_ ? typeof config.implements_ === "function" ? [config.implements_] : config.implements_ : [];
-    var members = config.members || {};
-    var staticMembers = config.staticMembers || {};
+    var members = convertShortcuts(config.members);
+    var staticMembers = convertShortcuts(config.staticMembers);
     var staticInitializers = config.staticInitializers || {};
     var staticCode = config.staticCode;
     Object.defineProperty(clazz, "$$", {

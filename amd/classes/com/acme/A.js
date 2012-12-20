@@ -31,23 +31,23 @@ define(["runtime/defineClass", "./I", "as3/trace", "as3/bind"],
       },
 
       // public method:
-      foo: { value: function foo(x) {
+      foo: function foo(x) {
 /*25*/    return secret.call(this, A.bar(x)); // rewritten private method call
-      }},
+      },
 
       // public method:
-      baz: { value: function baz() {
+      baz: function baz() {
 /*29*/    var tmp = bind_(this, secret, "secret$1"); // rewritten method access w/o invocation
 /*30*/    return tmp("-bound");
-      }}
+      }
     },
 
     staticMembers: {
       // public static method:
-      bar: { value: function bar(x) {
+      bar: function bar(x) {
           A.$$ && A.$$(); // execute static code once on first usage
 /*34*/    return x + 1;
-      }}
+      }
     },
 
     staticCode: function() {

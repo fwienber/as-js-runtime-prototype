@@ -17,17 +17,17 @@ define(["runtime/defineClass", "as3/trace", "./A", "./sub/IOther", "./sub/ISub"]
       count:  { value: 0, writable: true },
 
       // public method (overriding):
-      foo: { value: function foo(x) {
+      foo: function foo(x) {
 /*22*/    return A.prototype.foo.call(this, x + 2) + "-sub"; // rewritten super method call
-      }}
+      }
     },
 
     staticMembers: {
       // public static method:
-      nowPlusOne: { value: function nowPlusOne() {
+      nowPlusOne: function nowPlusOne() {
           B.$$ && B.$$(); // ensure class is initialized
 /* 8*/    return new Date(B.now.getTime() + 60*60*1000);
-      }},
+      },
 
       // public static field:
       now: { value: null, writable: true }
