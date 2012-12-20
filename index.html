@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ActionScript JavaScript Runtime Prototype</title>
+  </head>
+<body>
+<h1>ActionScript JavaScript Runtime Prototype</h1>
+
+<h2>ActionScript => JavaScript</h2>
+<ul>
+    <li><a href="src/com/acme/I.as">interface com.acme.I</a> => <a href="amd/classes/com/acme/I.js">com/acme/A.js</a></li>
+    <li><a href="src/com/acme/A.as">class com.acme.A</a> implements I => <a href="amd/classes/com/acme/A.js">com/acme/A.js</a></li>
+    <li><a href="src/com/acme/sub/ISub.as">interface com.acme.sub.ISub</a> extends I => <a href="amd/classes/com/acme/sub/ISub.js">com/acme/sub/ISub.js</a></li>
+    <li><a href="src/com/acme/sub/IOther.as">interface com.acme.sub.IOther</a> => <a href="amd/classes/com/acme/sub/ISub.js">com/acme/sub/IOther.js</a></li>
+    <li><a href="src/com/acme/B.as">com.acme.B</a> extends A implements ISub, IOther => <a href="amd/classes/com/acme/B.js">com/acme/B.js</a></li>
+</ul>
+
+<h2>Run It!</h2>
+<ul>
+    <li>Run the <a href="app-debug.html">debuggable application</a></li>
+    <li>Run the <a href="app-linked.html">linked application</a></li>
+    <li>Run the <a href="app-minified.html">minified application</a></li>
+</ul>
+
+</body>
+</html>
