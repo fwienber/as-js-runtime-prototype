@@ -1,5 +1,5 @@
-define(["runtime/defineClass", "./I", "classes/trace", "as3/bind"],
-        function(defineClass,     I,       trace,       bind_) {
+define(["runtime/runtime", "./I", "classes/trace"],
+        function($rt,         I,           trace) {
   "use strict";
 
   // constructor / class:
@@ -13,7 +13,7 @@ define(["runtime/defineClass", "./I", "classes/trace", "as3/bind"],
 /*21*/    return this.msg + n; // complemented "this."
   }
 
-  return defineClass(A, { implements_: I,
+  return $rt.class_(A, { implements_: I,
     members: {
       // define private field (renamed!) with typed default value:
       _msg$1: { value: null, writable: true },
@@ -37,7 +37,7 @@ define(["runtime/defineClass", "./I", "classes/trace", "as3/bind"],
 
       // public method:
       baz: function baz() {
-/*29*/    var tmp = bind_(this, secret, "secret$1"); // rewritten method access w/o invocation
+/*29*/    var tmp = $rt.bind(this, secret, "secret$1"); // rewritten method access w/o invocation
 /*30*/    return tmp("-bound");
       }
     },

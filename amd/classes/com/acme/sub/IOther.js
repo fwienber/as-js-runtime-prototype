@@ -1,4 +1,4 @@
-define(["runtime/defineInterface"], function(defineInterface) {
+define(["runtime/runtime"], function($rt) {
   "use strict";
-  return defineInterface("com.acme.sub.IOther", []);
+  return $rt.interface_("com.acme.sub.IOther", []);
 });

@@ -15,7 +15,7 @@ define(["./es5-polyfills"], function() {
     }
     return result;
   }
-  return function(clazz, config) {
+  function defineClass(clazz, config) {
     var extends_ = config.extends_ || Object;
     var implements_ = config.implements_ ? typeof config.implements_ === "function" ? [config.implements_] : config.implements_ : [];
     var members = convertShortcuts(config.members);
@@ -54,5 +54,64 @@ define(["./es5-polyfills"], function() {
     members.constructor = { value: clazz }; // correct constructor property
     clazz.prototype = Object.create(extends_.prototype, members); // establish inheritance prototype chain and add instance members
     return clazz;
+  }
+
+  function defineInterface(fullyQualifiedName, extends_) {
+    function Interface($implements) {
+      extends_.forEach(function(i) { i($implements); });
+      $implements[fullyQualifiedName] = true;
+      return $implements;
+    }
+    Interface.isInstance = function(object) {
+      return object !== null && typeof object === "object" &&
+              !!object.constructor.$implements &&
+              fullyQualifiedName in object.constructor.$implements;
+    };
+    Interface.toString = function toString() {
+      return "[Interface " + fullyQualifiedName + "]";
+    };
+    return Interface;
+  }
+
+  function bind(object, method, boundMethodName) {
+    var boundMethod = object[boundMethodName];
+    if (!boundMethod) {
+      boundMethod = method.bind(object);
+      Object.defineProperty(object, boundMethodName, { value: boundMethod });
+    }
+    return boundMethod;
+  }
+
+  function is(object, type) {
+    return !!type && object !== undefined && object !== null &&
+      // instanceof returns false negatives in some browsers, so check constructor property, too:
+      (object instanceof type || object.constructor === type ||
+      // "type" may be an interface:
+      typeof type.isInstance === "function" && type.isInstance(object));
+  }
+
+  function as(object, type) {
+    return is(object, type) ? object : null;
+  }
+
+  function cast(type, object) {
+    if (object === undefined || object === null) {
+      return null;
+    }
+    if (object instanceof type || object.constructor === type ||
+      // "type" may be an interface:
+      typeof type.isInstance === "function" && type.isInstance(object)) {
+      return object;
+    }
+    throw new TypeError("'" + object + "' cannot be cast to " + type + ".");
+  }
+
+  return {
+    class_: defineClass,
+    interface_: defineInterface,
+    as: as,
+    cast: cast,
+    is: is,
+    bind: bind
   }
 });
