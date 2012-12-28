@@ -5,9 +5,8 @@ define(function() {
       return null;
     }
     if (object instanceof type || object.constructor === type ||
-      // only Objects may implement an interface:
-      !!type.$interface && typeof object === "object" &&
-      !!object.constructor.$implements && type.$interface in object.constructor.$implements) {
+        // "type" may be an interface:
+        typeof type.isInstance === "function" && type.isInstance(object)) {
       return object;
     }
     throw new TypeError("'" + object + "' cannot be cast to " + type + ".");

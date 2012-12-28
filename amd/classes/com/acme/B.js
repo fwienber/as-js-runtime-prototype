@@ -1,4 +1,4 @@
-define(["runtime/defineClass", "as3/trace", "./A", "./sub/IOther", "./sub/ISub"],
+define(["runtime/defineClass", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
         function(defineClass,       trace,     A,         IOther,         ISub) {
   "use strict";
 

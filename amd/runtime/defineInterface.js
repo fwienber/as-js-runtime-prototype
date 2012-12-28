@@ -1,4 +1,4 @@
-define(["shim!Array.prototype.forEach"], function() {
+define(["./es5-polyfills"], function() {
   "use strict";
   return function(fullyQualifiedName, extends_) {
     function Interface($implements) {
@@ -6,7 +6,14 @@ define(["shim!Array.prototype.forEach"], function() {
       $implements[fullyQualifiedName] = true;
       return $implements;
     }
-    Interface.$interface = fullyQualifiedName;
+    Interface.isInstance = function(object) {
+      return object !== null && typeof object === "object" &&
+              !!object.constructor.$implements &&
+              fullyQualifiedName in object.constructor.$implements;
+    };
+    Interface.toString = function toString() {
+      return "[Interface " + fullyQualifiedName + "]";
+    };    
     return Interface;
   };
 });

@@ -1,4 +1,4 @@
-define(["runtime/defineClass", "./I", "as3/trace", "as3/bind"],
+define(["runtime/defineClass", "./I", "classes/trace", "as3/bind"],
         function(defineClass,     I,       trace,       bind_) {
   "use strict";
 

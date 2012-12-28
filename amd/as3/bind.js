@@ -1,4 +1,4 @@
-define(["shims!Object!create", "shim!Function.prototype.bind"], function() {
+define(["runtime/es5-polyfills"], function() {
   "use strict";
   return function(object, method, boundMethodName) {
     var boundMethod = object[boundMethodName];

@@ -1,4 +1,4 @@
-define(["shim!Array.prototype.map"], function() {
+define(["runtime/es5-polyfills"], function() {
   "use strict";
   try {
     console.log("This is FlexJS.");

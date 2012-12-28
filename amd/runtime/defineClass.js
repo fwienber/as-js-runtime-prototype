@@ -1,4 +1,4 @@
-define(["shims!Object!create", "shim!Array.prototype.forEach"], function() {
+define(["./es5-polyfills"], function() {
   "use strict";
   function toString() {
     return "[Class " + this.name + "]";

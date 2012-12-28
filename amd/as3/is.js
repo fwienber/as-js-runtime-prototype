@@ -2,10 +2,9 @@ define(function() {
   "use strict";
   return function is(object, type) {
     return !!type && object !== undefined && object !== null &&
-      // constructor or instanceof may return false negatives:
+      // instanceof returns false negatives in some browsers, so check constructor property, too:
       (object instanceof type || object.constructor === type ||
-      // only Objects may implement an interface:
-      !!type.$interface && typeof object === "object" &&
-      !!object.constructor.$implements && type.$interface in object.constructor.$implements);
+      // "type" may be an interface:
+       typeof type.isInstance === "function" && type.isInstance(object));
   };
 });
