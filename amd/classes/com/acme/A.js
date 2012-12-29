@@ -1,5 +1,5 @@
-define(["runtime/runtime", "./I", "classes/trace"],
-        function($rt,         I,           trace) {
+define(["runtime/AS3", "./I", "classes/trace"],
+        function(AS3,     I,           trace) {
   "use strict";
 
   // constructor / class:
@@ -13,7 +13,7 @@ define(["runtime/runtime", "./I", "classes/trace"],
 /*21*/    return this.msg + n; // complemented "this."
   }
 
-  return $rt.class_(A, { implements_: I,
+  return AS3.class_(A, { implements_: I,
     members: {
       // define private field (renamed!) with typed default value:
       _msg$1: { value: null, writable: true },
@@ -37,7 +37,7 @@ define(["runtime/runtime", "./I", "classes/trace"],
 
       // public method:
       baz: function baz() {
-/*29*/    var tmp = $rt.bind(this, secret, "secret$1"); // rewritten method access w/o invocation
+/*29*/    var tmp = AS3.bind(this, secret, "secret$1"); // rewritten method access w/o invocation
 /*30*/    return tmp("-bound");
       }
     },

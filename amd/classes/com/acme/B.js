@@ -1,5 +1,5 @@
-define(["runtime/runtime", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
-        function($rt,               trace,     A,         IOther,         ISub) {
+define(["runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
+        function(AS3,           trace,     A,         IOther,         ISub) {
   "use strict";
 
   // constructor / class:
@@ -11,7 +11,7 @@ define(["runtime/runtime", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"]
 /*14*/    trace("now: " + B.now);
   }
 
-  return $rt.class_(B, { extends_: A, implements_: [IOther, ISub],
+  return AS3.class_(B, { extends_: A, implements_: [IOther, ISub],
     members: {
       // public field with typed default value:
       count:  { value: 0, writable: true },

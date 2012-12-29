@@ -1,4 +1,4 @@
-define(["runtime/runtime"], function($rt) {
+define(["runtime/AS3"], function(AS3) {
   "use strict";
-  return $rt.interface_("com.acme.sub.IOther", []);
+  return AS3.interface_("com.acme.sub.IOther", []);
 });

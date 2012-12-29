@@ -1,6 +1,6 @@
 "use strict";
-define(["runtime/runtime", "./trace","./com/acme/B","./com/acme/A","./com/acme/I","./com/acme/sub/IOther","./com/acme/sub/ISub"],
-  function(      $rt,         trace,             B,             A,             I,                 IOther,                 ISub) {
+define(["runtime/AS3", "./trace","./com/acme/B","./com/acme/A","./com/acme/I","./com/acme/sub/IOther","./com/acme/sub/ISub"],
+  function(      AS3,     trace,             B,             A,             I,                 IOther,                 ISub) {
     "use strict";
     function HelloWorld() {
       trace((B.$$&&B.$$(),B).now);
@@ -10,21 +10,21 @@ define(["runtime/runtime", "./trace","./com/acme/B","./com/acme/A","./com/acme/I
       trace("b = new B('hello '): " + b);
       trace("b.foo(3): " + b.foo(3));
       trace("b.baz(): " + b.baz());
-      trace("b is A: " + $rt.is(b, A));
-      trace("b is B: " + $rt.is(b, B));
-      trace("b is I: " + $rt.is(b, I));
-      trace("b is ISub: " + $rt.is(b, ISub));
-      trace("b is IOther: " + $rt.is(b, IOther));
+      trace("b is A: " + AS3.is(b, A));
+      trace("b is B: " + AS3.is(b, B));
+      trace("b is I: " + AS3.is(b, I));
+      trace("b is ISub: " + AS3.is(b, ISub));
+      trace("b is IOther: " + AS3.is(b, IOther));
 
       var a = new A('aha');
       trace("a = new A('aha'): " + a);
-      trace("a is A: " + $rt.is(a, A));
-      trace("a is B: " + $rt.is(a, B));
-      trace("a is I: " + $rt.is(a, I));
-      trace("a is ISub: " + $rt.is(a, ISub));
-      trace("a is IOther: " + $rt.is(a, IOther));
+      trace("a is A: " + AS3.is(a, A));
+      trace("a is B: " + AS3.is(a, B));
+      trace("a is I: " + AS3.is(a, I));
+      trace("a is ISub: " + AS3.is(a, ISub));
+      trace("a is IOther: " + AS3.is(a, IOther));
     }
-    return $rt.class_(HelloWorld, {
+    return AS3.class_(HelloWorld, {
       // no members etc.
     });
   });
