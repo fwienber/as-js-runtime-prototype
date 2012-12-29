@@ -625,30 +625,16 @@ define('runtime/AS3',["./es5-polyfills"], function() {
     var implements_ = config.implements_ ? typeof config.implements_ === "function" ? [config.implements_] : config.implements_ : [];
     var members = convertShortcuts(config.members);
     var staticMembers = convertShortcuts(config.staticMembers);
-    var staticInitializers = config.staticInitializers || {};
     var staticCode = config.staticCode;
     staticMembers.$$ = {
       value: function() {
         delete clazz.$$;   // self-destruct to execute only once
         extends_.$$ && extends_.$$();   // ensure super class is initialized
-        // then, execute static initializers:
-        for (var name in staticInitializers) {
-          var staticInitializer = staticInitializers[name];
-          Object.defineProperty(clazz, name, {
-            value: staticInitializer(),
-            writable: !!staticMembers[name].writable,
-            configurable: false  // not anymore...
-          });
-        }
-        // then, execute static code:
+        // then, execute static initializers and code:
         staticCode && staticCode();
       },
       configurable: true  // so we can delete it
     };
-    // make all static fields with initializer configurable, so we can redefine them:
-    for (var name in staticInitializers) {
-      staticMembers[name].configurable = true; // so we can overwrite it
-    }
     // create set of all interfaces implemented by this class
     var $implements = extends_.$implements ? Object.create(extends_.$implements) : {};
     implements_.forEach(function(i) { i($implements); });
@@ -839,10 +825,8 @@ define('classes/com/acme/B',["runtime/AS3", "classes/trace", "./A", "./sub/IOthe
       now: { value: null, writable: true }
     },
       
-    staticInitializers: {
-      now: function() {
-/*25*/    return new Date();
-      }
+    staticCode: function() {
+/*25*/    B.now = new Date();
     }
   });
 });

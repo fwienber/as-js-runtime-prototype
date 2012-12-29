@@ -33,10 +33,8 @@ define(["runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
       now: { value: null, writable: true }
     },
       
-    staticInitializers: {
-      now: function() {
-/*25*/    return new Date();
-      }
+    staticCode: function() {
+/*25*/    B.now = new Date();
     }
   });
 });
