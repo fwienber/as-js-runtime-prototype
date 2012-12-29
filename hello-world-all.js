@@ -603,7 +603,7 @@ define('runtime/es5-polyfills',[],function () {
   }
 });
 
-define('runtime/runtime',["./es5-polyfills"], function() {
+define('runtime/AS3',["./es5-polyfills"], function() {
   
   function toString() {
     return "[Class " + this.name + "]";
@@ -705,7 +705,7 @@ define('runtime/runtime',["./es5-polyfills"], function() {
     }
     if (object instanceof type || object.constructor === type ||
       // "type" may be an interface:
-            typeof type.isInstance === "function" && type.isInstance(object)) {
+      typeof type.isInstance === "function" && type.isInstance(object)) {
       return object;
     }
     throw new TypeError("'" + object + "' cannot be cast to " + type + ".");
@@ -731,13 +731,13 @@ define('classes/trace',["runtime/es5-polyfills"], function() {
   }
 });
 
-define('classes/com/acme/I',["runtime/runtime"], function($rt) {
+define('classes/com/acme/I',["runtime/AS3"], function(AS3) {
   
-  return $rt.interface_("com.acme.I", []);
+  return AS3.interface_("com.acme.I", []);
 });
 
-define('classes/com/acme/A',["runtime/runtime", "./I", "classes/trace"],
-        function($rt,         I,           trace) {
+define('classes/com/acme/A',["runtime/AS3", "./I", "classes/trace"],
+        function(AS3,     I,           trace) {
   
 
   // constructor / class:
@@ -751,7 +751,7 @@ define('classes/com/acme/A',["runtime/runtime", "./I", "classes/trace"],
 /*21*/    return this.msg + n; // complemented "this."
   }
 
-  return $rt.class_(A, { implements_: I,
+  return AS3.class_(A, { implements_: I,
     members: {
       // define private field (renamed!) with typed default value:
       _msg$1: { value: null, writable: true },
@@ -775,7 +775,7 @@ define('classes/com/acme/A',["runtime/runtime", "./I", "classes/trace"],
 
       // public method:
       baz: function baz() {
-/*29*/    var tmp = $rt.bind(this, secret, "secret$1"); // rewritten method access w/o invocation
+/*29*/    var tmp = AS3.bind(this, secret, "secret$1"); // rewritten method access w/o invocation
 /*30*/    return tmp("-bound");
       }
     },
@@ -794,18 +794,18 @@ define('classes/com/acme/A',["runtime/runtime", "./I", "classes/trace"],
   });
 });
 
-define('classes/com/acme/sub/IOther',["runtime/runtime"], function($rt) {
+define('classes/com/acme/sub/IOther',["runtime/AS3"], function(AS3) {
   
-  return $rt.interface_("com.acme.sub.IOther", []);
+  return AS3.interface_("com.acme.sub.IOther", []);
 });
 
-define('classes/com/acme/sub/ISub',["runtime/runtime", "../I"], function($rt, I) {
+define('classes/com/acme/sub/ISub',["runtime/AS3", "../I"], function(AS3, I) {
   
-  return $rt.interface_("com.acme.sub.ISub", [I]);
+  return AS3.interface_("com.acme.sub.ISub", [I]);
 });
 
-define('classes/com/acme/B',["runtime/runtime", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
-        function($rt,               trace,     A,         IOther,         ISub) {
+define('classes/com/acme/B',["runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
+        function(AS3,           trace,     A,         IOther,         ISub) {
   
 
   // constructor / class:
@@ -817,7 +817,7 @@ define('classes/com/acme/B',["runtime/runtime", "classes/trace", "./A", "./sub/I
 /*14*/    trace("now: " + B.now);
   }
 
-  return $rt.class_(B, { extends_: A, implements_: [IOther, ISub],
+  return AS3.class_(B, { extends_: A, implements_: [IOther, ISub],
     members: {
       // public field with typed default value:
       count:  { value: 0, writable: true },
@@ -848,8 +848,8 @@ define('classes/com/acme/B',["runtime/runtime", "classes/trace", "./A", "./sub/I
 });
 
 
-define('classes/HelloWorld',["runtime/runtime", "./trace","./com/acme/B","./com/acme/A","./com/acme/I","./com/acme/sub/IOther","./com/acme/sub/ISub"],
-  function(      $rt,         trace,             B,             A,             I,                 IOther,                 ISub) {
+define('classes/HelloWorld',["runtime/AS3", "./trace","./com/acme/B","./com/acme/A","./com/acme/I","./com/acme/sub/IOther","./com/acme/sub/ISub"],
+  function(      AS3,     trace,             B,             A,             I,                 IOther,                 ISub) {
     
     function HelloWorld() {
       trace((B.$$&&B.$$(),B).now);
@@ -859,21 +859,21 @@ define('classes/HelloWorld',["runtime/runtime", "./trace","./com/acme/B","./com/
       trace("b = new B('hello '): " + b);
       trace("b.foo(3): " + b.foo(3));
       trace("b.baz(): " + b.baz());
-      trace("b is A: " + $rt.is(b, A));
-      trace("b is B: " + $rt.is(b, B));
-      trace("b is I: " + $rt.is(b, I));
-      trace("b is ISub: " + $rt.is(b, ISub));
-      trace("b is IOther: " + $rt.is(b, IOther));
+      trace("b is A: " + AS3.is(b, A));
+      trace("b is B: " + AS3.is(b, B));
+      trace("b is I: " + AS3.is(b, I));
+      trace("b is ISub: " + AS3.is(b, ISub));
+      trace("b is IOther: " + AS3.is(b, IOther));
 
       var a = new A('aha');
       trace("a = new A('aha'): " + a);
-      trace("a is A: " + $rt.is(a, A));
-      trace("a is B: " + $rt.is(a, B));
-      trace("a is I: " + $rt.is(a, I));
-      trace("a is ISub: " + $rt.is(a, ISub));
-      trace("a is IOther: " + $rt.is(a, IOther));
+      trace("a is A: " + AS3.is(a, A));
+      trace("a is B: " + AS3.is(a, B));
+      trace("a is I: " + AS3.is(a, I));
+      trace("a is ISub: " + AS3.is(a, ISub));
+      trace("a is IOther: " + AS3.is(a, IOther));
     }
-    return $rt.class_(HelloWorld, {
+    return AS3.class_(HelloWorld, {
       // no members etc.
     });
   });
