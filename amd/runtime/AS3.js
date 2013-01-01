@@ -11,35 +11,42 @@ define(["./es5-polyfills"], function() {
         result[name] = propertyDescriptor !== null && typeof propertyDescriptor === "object" ? propertyDescriptor
           // anything *not* an object is a shortcut for a property descriptor with that value (non-writable, non-enumerable, non-configurable):
                 : { value: propertyDescriptor };
+        if (propertyDescriptor.get) {
+          result["get$" + name] = { value: propertyDescriptor.get };
+        }
+        if (propertyDescriptor.set) {
+          result["set$" + name] = { value: propertyDescriptor.set };
+        }
       }
     }
     return result;
   }
-  function defineClass(clazz, config) {
-    var extends_ = config.extends_ || Object;
-    var implements_ = config.implements_ ? typeof config.implements_ === "function" ? [config.implements_] : config.implements_ : [];
-    var members = convertShortcuts(config.members);
-    var staticMembers = convertShortcuts(config.staticMembers);
-    var staticCode = config.staticCode;
-    staticMembers.$$ = {
-      value: function() {
-        delete clazz.$$;   // self-destruct to execute only once
-        extends_.$$ && extends_.$$();   // ensure super class is initialized
-        // then, execute static initializers and code:
-        staticCode && staticCode();
-      },
-      configurable: true  // so we can delete it
-    };
-    // create set of all interfaces implemented by this class
-    var $implements = extends_.$implements ? Object.create(extends_.$implements) : {};
-    implements_.forEach(function(i) { i($implements); });
-    staticMembers.$implements = { value: $implements };
+  function defineClass(definingCode) {
+    return Object.defineProperty({}, "_", {
+      configurable: true,
+      get: function() {
+        var config = definingCode();
+        var members = convertShortcuts(config.members);
+        var clazz = members.constructor.value;
+        Object.defineProperty(this, "_", { value: clazz });
+        var extends_ = config.extends_ || Object; // super class
+        var implements_ = config.implements_ ? typeof config.implements_ === "function" ? [config.implements_] : config.implements_ : [];
+        var staticMembers = convertShortcuts(config.staticMembers);
+        // create set of all interfaces implemented by this class
+        var $implements = extends_.$implements ? Object.create(extends_.$implements) : {};
+        implements_.forEach(function(i) { i($implements); });
+        staticMembers.$implements = { value: $implements };
 
-    staticMembers.toString = { value: toString }; // add Class#toString()
-    Object.defineProperties(clazz, staticMembers);   // add static members
-    members.constructor = { value: clazz }; // correct constructor property
-    clazz.prototype = Object.create(extends_.prototype, members); // establish inheritance prototype chain and add instance members
-    return clazz;
+        staticMembers.toString = { value: toString }; // add Class#toString()
+        Object.defineProperties(clazz, staticMembers);   // add static members
+        clazz.prototype = Object.create(extends_.prototype, members); // establish inheritance prototype chain and add instance members
+
+        var staticCode = config.staticCode;
+        // execute static initializers and code:
+        staticCode && staticCode();
+        return clazz;
+      }
+    });
   }
 
   function defineInterface(fullyQualifiedName, extends_) {

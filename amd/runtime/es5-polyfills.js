@@ -148,11 +148,19 @@ define(function () {
       if (orig) { try { return orig(o, prop, desc); } catch (e) {} }
 
       if (o !== Object(o)) { throw new TypeError("Object.defineProperty called on non-object"); }
-      if (Object.prototype.__defineGetter__ && ('get' in desc)) {
-        Object.prototype.__defineGetter__.call(o, prop, desc.get);
+      if (('get' in desc)) {
+        if (Object.prototype.__defineGetter__) {
+          Object.prototype.__defineGetter__.call(o, prop, desc.get);
+        } else {
+          o["get$" + prop] = desc.get;
+        }
       }
-      if (Object.prototype.__defineSetter__ && ('set' in desc)) {
-        Object.prototype.__defineSetter__.call(o, prop, desc.set);
+      if (('set' in desc)) {
+        if (Object.prototype.__defineSetter__) {
+          Object.prototype.__defineSetter__.call(o, prop, desc.set);
+        } else {
+          o["set$" + prop] = desc.set;
+        }
       }
       if ('value' in desc) {
         o[prop] = desc.value;

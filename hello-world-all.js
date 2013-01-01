@@ -548,11 +548,19 @@ define('runtime/es5-polyfills',[],function () {
       if (orig) { try { return orig(o, prop, desc); } catch (e) {} }
 
       if (o !== Object(o)) { throw new TypeError("Object.defineProperty called on non-object"); }
-      if (Object.prototype.__defineGetter__ && ('get' in desc)) {
-        Object.prototype.__defineGetter__.call(o, prop, desc.get);
+      if (('get' in desc)) {
+        if (Object.prototype.__defineGetter__) {
+          Object.prototype.__defineGetter__.call(o, prop, desc.get);
+        } else {
+          o["get$" + prop] = desc.get;
+        }
       }
-      if (Object.prototype.__defineSetter__ && ('set' in desc)) {
-        Object.prototype.__defineSetter__.call(o, prop, desc.set);
+      if (('set' in desc)) {
+        if (Object.prototype.__defineSetter__) {
+          Object.prototype.__defineSetter__.call(o, prop, desc.set);
+        } else {
+          o["set$" + prop] = desc.set;
+        }
       }
       if ('value' in desc) {
         o[prop] = desc.value;
@@ -616,35 +624,42 @@ define('runtime/AS3',["./es5-polyfills"], function() {
         result[name] = propertyDescriptor !== null && typeof propertyDescriptor === "object" ? propertyDescriptor
           // anything *not* an object is a shortcut for a property descriptor with that value (non-writable, non-enumerable, non-configurable):
                 : { value: propertyDescriptor };
+        if (propertyDescriptor.get) {
+          result["get$" + name] = { value: propertyDescriptor.get };
+        }
+        if (propertyDescriptor.set) {
+          result["set$" + name] = { value: propertyDescriptor.set };
+        }
       }
     }
     return result;
   }
-  function defineClass(clazz, config) {
-    var extends_ = config.extends_ || Object;
-    var implements_ = config.implements_ ? typeof config.implements_ === "function" ? [config.implements_] : config.implements_ : [];
-    var members = convertShortcuts(config.members);
-    var staticMembers = convertShortcuts(config.staticMembers);
-    var staticCode = config.staticCode;
-    staticMembers.$$ = {
-      value: function() {
-        delete clazz.$$;   // self-destruct to execute only once
-        extends_.$$ && extends_.$$();   // ensure super class is initialized
-        // then, execute static initializers and code:
-        staticCode && staticCode();
-      },
-      configurable: true  // so we can delete it
-    };
-    // create set of all interfaces implemented by this class
-    var $implements = extends_.$implements ? Object.create(extends_.$implements) : {};
-    implements_.forEach(function(i) { i($implements); });
-    staticMembers.$implements = { value: $implements };
+  function defineClass(definingCode) {
+    return Object.defineProperty({}, "_", {
+      configurable: true,
+      get: function() {
+        var config = definingCode();
+        var members = convertShortcuts(config.members);
+        var clazz = members.constructor.value;
+        Object.defineProperty(this, "_", { value: clazz });
+        var extends_ = config.extends_ || Object; // super class
+        var implements_ = config.implements_ ? typeof config.implements_ === "function" ? [config.implements_] : config.implements_ : [];
+        var staticMembers = convertShortcuts(config.staticMembers);
+        // create set of all interfaces implemented by this class
+        var $implements = extends_.$implements ? Object.create(extends_.$implements) : {};
+        implements_.forEach(function(i) { i($implements); });
+        staticMembers.$implements = { value: $implements };
 
-    staticMembers.toString = { value: toString }; // add Class#toString()
-    Object.defineProperties(clazz, staticMembers);   // add static members
-    members.constructor = { value: clazz }; // correct constructor property
-    clazz.prototype = Object.create(extends_.prototype, members); // establish inheritance prototype chain and add instance members
-    return clazz;
+        staticMembers.toString = { value: toString }; // add Class#toString()
+        Object.defineProperties(clazz, staticMembers);   // add static members
+        clazz.prototype = Object.create(extends_.prototype, members); // establish inheritance prototype chain and add instance members
+
+        var staticCode = config.staticCode;
+        // execute static initializers and code:
+        staticCode && staticCode();
+        return clazz;
+      }
+    });
   }
 
   function defineInterface(fullyQualifiedName, extends_) {
@@ -726,57 +741,59 @@ define('classes/com/acme/A',["runtime/AS3", "./I", "classes/trace"],
         function(AS3,     I,           trace) {
   
 
-  // constructor / class:
-  function A(msg/*:String*/) {
-          A.$$ && A.$$(); // execute static code once on first usage
-/* 5*/    this.msg = msg;
-  }
+  return AS3.class_(function() {
+    // constructor / class:
+    function A(msg/*:String*/) {
+/* 5*/    this.set$msg(msg); // rewritten property set access
+    }
 
-  // private method:
-  function secret(n) {
-/*21*/    return this.msg + n; // complemented "this."
-  }
+    // private method:
+    function secret(n) {
+/*21*/    return this.get$msg() + n; // complemented "this." and rewritten property get access
+    }
 
-  return AS3.class_(A, { implements_: I,
-    members: {
-      // define private field (renamed!) with typed default value:
-      _msg$1: { value: null, writable: true },
+    return {
+      implements_: I,
+      members: {
+        constructor: A,
+        // define private field (renamed!) with typed default value:
+        _msg$1: { value: 0, writable: true },
 
-      // property defined through public getter/setter:
-      msg: {
-        // public getter:
-        get: function get_msg()/*:String*/ {
-/*11*/    return this._msg$1; // rewritten private field access
+        // property defined through public getter/setter:
+        msg: {
+          // public getter:
+          get: function get$msg()/*:String*/ {
+/*11*/      return String(this._msg$1); // rewritten private field access
+          },
+          // public setter
+          set: function set$msg(value/*:String*/)/*:void*/ {
+/*17*/      this._msg$1 = parseInt(value, 10) >> 0; // rewritten private field access + int coercion
+          }
         },
-        // public setter
-        set: function set_msg(value/*:String*/)/*:void*/ {
-/*17*/    this._msg$1 = value; // rewritten private field access
+
+        // public method:
+        foo: function foo(x) {
+/*25*/    return secret.call(this, A.bar(x)); // rewritten private method call
+        },
+
+        // public method:
+        baz: function baz() {
+/*29*/    var tmp = AS3.bind(this, secret, "secret$1"); // rewritten method access w/o invocation
+/*30*/    return tmp("-bound");
         }
       },
 
-      // public method:
-      foo: function foo(x) {
-/*25*/    return secret.call(this, A.bar(x)); // rewritten private method call
+      staticMembers: {
+        // public static method:
+        bar: function bar(x) {
+/*34*/    return x + 1;
+        }
       },
 
-      // public method:
-      baz: function baz() {
-/*29*/    var tmp = AS3.bind(this, secret, "secret$1"); // rewritten method access w/o invocation
-/*30*/    return tmp("-bound");
-      }
-    },
-
-    staticMembers: {
-      // public static method:
-      bar: function bar(x) {
-          A.$$ && A.$$(); // execute static code once on first usage
-/*34*/    return x + 1;
-      }
-    },
-
-    staticCode: function() {
+      staticCode: function() {
 /*14*/  trace("Class A is initialized!");
-    }
+      }
+    };
   });
 });
 
@@ -791,79 +808,86 @@ define('classes/com/acme/sub/ISub',["runtime/AS3", "../I"], function(AS3, I) {
 });
 
 define('classes/com/acme/B',["runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
-        function(AS3,           trace,     A,         IOther,         ISub) {
+        function(AS3,           trace,     A_,        IOther,         ISub) {
   
 
-  // constructor / class:
-  function B(msg, count) {
-          B.$$ && B.$$(); // ensure class is initialized
+  return AS3.class_(function() {
+    var A = A_._ || A_.get$_(); // initialize super class. Only do this for super class, as there can be no cyclic dependencies!
+    // constructor / class:
+    function B(msg, count) {
 /*19*/    this.barfoo = A.bar(3); // inlined field initializer
 /*12*/    A.call(this, msg); // rewritten super call
 /*13*/    this.count = count;
 /*14*/    trace("now: " + B.now);
-  }
+    }
 
-  return AS3.class_(B, { extends_: A, implements_: [IOther, ISub],
-    members: {
-      // public field with typed default value:
-      count:  { value: 0, writable: true },
+    return { extends_: A, implements_: [IOther, ISub],
+      members: {
+        constructor: B,
+        // public field with typed default value:
+        count:  { value: 0, writable: true },
 
-      // public method (overriding):
-      foo: function foo(x) {
+        // public method (overriding):
+        foo: function foo(x) {
 /*22*/    return A.prototype.foo.call(this, x + 2) + "-sub"; // rewritten super method call
-      }
-    },
-
-    staticMembers: {
-      // public static method:
-      nowPlusOne: function nowPlusOne() {
-          B.$$ && B.$$(); // ensure class is initialized
-/* 8*/    return new Date(B.now.getTime() + 60*60*1000);
+        }
       },
 
-      // public static field:
-      now: { value: null, writable: true }
-    },
-      
-    staticCode: function() {
+      staticMembers: {
+        // public static method:
+        nowPlusOne: function nowPlusOne() {
+/* 8*/    return new Date(B.now.getTime() + 60*60*1000);
+        },
+
+        // public static field:
+        now: { value: null, writable: true }
+      },
+
+      staticCode: function() {
 /*25*/    B.now = new Date();
-    }
+      }
+    };
   });
 });
 
 
 define('classes/HelloWorld',["runtime/AS3", "./trace","./com/acme/B","./com/acme/A","./com/acme/I","./com/acme/sub/IOther","./com/acme/sub/ISub"],
-  function(      AS3,     trace,             B,             A,             I,                 IOther,                 ISub) {
-    
+  function(      AS3,     trace,             B_,            A_,            I,                 IOther,                 ISub) {
+  
+  return AS3.class_(function() {
+    var A, B;
     function HelloWorld() {
-      trace((B.$$&&B.$$(),B).now);
+      trace((B = B_._ || B_.get$_()).now);
       trace(B.nowPlusOne());
 
       var b = new B('hello ');
       trace("b = new B('hello '): " + b);
       trace("b.foo(3): " + b.foo(3));
       trace("b.baz(): " + b.baz());
-      trace("b is A: " + AS3.is(b, A));
+      trace("b is A: " + AS3.is(b, A = A_._ || A.get$_()));
       trace("b is B: " + AS3.is(b, B));
       trace("b is I: " + AS3.is(b, I));
       trace("b is ISub: " + AS3.is(b, ISub));
       trace("b is IOther: " + AS3.is(b, IOther));
 
-      var a = new A('aha');
-      trace("a = new A('aha'): " + a);
+      var a = new A_._('123');
+      trace("a = new A('123'): " + a);
       trace("a is A: " + AS3.is(a, A));
       trace("a is B: " + AS3.is(a, B));
       trace("a is I: " + AS3.is(a, I));
       trace("a is ISub: " + AS3.is(a, ISub));
       trace("a is IOther: " + AS3.is(a, IOther));
     }
-    return AS3.class_(HelloWorld, {
-      // no members etc.
-    });
+    return {
+      members: {
+        constructor: HelloWorld
+      }
+    };
   });
+});
 
-require(["classes/HelloWorld"], function(HelloWorld) {
-  new HelloWorld();
+require(["classes/HelloWorld"], function(HelloWorld_) {
+  new (HelloWorld_._ || HelloWorld_.get$_())();
 });
 
 define("application", function(){});

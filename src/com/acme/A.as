@@ -5,16 +5,16 @@ public class A implements I {
     this.msg = msg;
   }
 
-  private var _msg:String;
+  private var _msg:int;
 
   public function get msg():String {
-    return this._msg;
+    return String(this._msg);
   }
 
   trace("Class A is initialized!");
 
   public function set msg(value:String):void {
-    this._msg = value;
+    this._msg = parseInt(value, 10);
   }
 
   private function secret(n) {
