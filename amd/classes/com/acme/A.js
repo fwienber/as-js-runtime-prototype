@@ -5,12 +5,12 @@ define(["runtime/AS3", "./I", "classes/trace"],
   return AS3.class_(function() {
     // constructor / class:
     function A(msg/*:String*/) {
-/* 5*/    this.set$msg(msg); // rewritten property set access
+/* 5*/    this.set$msg(msg); // rewritten property set access; in ES5 environments, this.msg = msg works, too.
     }
 
     // private method:
     function secret(n) {
-/*21*/    return this.get$msg() + n; // complemented "this." and rewritten property get access
+/*21*/    return this.get$msg() + n; // complemented "this." and rewritten property get access; in ES5 environments, this.msg works, too.
     }
 
     return {
