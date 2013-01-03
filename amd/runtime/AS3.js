@@ -67,11 +67,11 @@ define(["./es5-polyfills"], function() {
   }
 
   function bind(object, method, boundMethodName) {
-    var boundMethod = object[boundMethodName];
-    if (!boundMethod) {
-      boundMethod = method.bind(object);
-      Object.defineProperty(object, boundMethodName, { value: boundMethod });
+    if (object.hasOwnProperty(boundMethodName)) {
+      return object[boundMethodName];
     }
+    var boundMethod = method.bind(object);
+    Object.defineProperty(object, boundMethodName, { value: boundMethod });
     return boundMethod;
   }
 
