@@ -1,8 +1,8 @@
-define(["runtime/AS3", "./I", "classes/trace"],
-        function(AS3,     I,           trace) {
+define(["exports", "runtime/AS3", "./I", "classes/trace"],
+        function($exports,  AS3,     I,           trace) {
   "use strict";
 
-  return AS3.class_(function() {
+  AS3.class_($exports, function() {
     // constructor / class:
     function A(msg/*:String*/) {
 /* 5*/    this.set$msg(msg); // rewritten property set access; in ES5 environments, this.msg = msg works, too.

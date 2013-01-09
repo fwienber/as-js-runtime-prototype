@@ -1,8 +1,8 @@
-define(["runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
-        function(AS3,           trace,     A_,        IOther,         ISub) {
+define(["exports", "runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
+        function($exports,  AS3,           trace,     A_,        IOther,         ISub) {
   "use strict";
 
-  return AS3.class_(function() {
+  AS3.class_($exports, function() {
     var A = A_._ || A_.get$_(); // initialize super class. Only do this for super class, as there can be no cyclic dependencies!
     // constructor / class:
     function B(msg, count) {

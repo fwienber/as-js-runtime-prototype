@@ -21,8 +21,8 @@ define(["./es5-polyfills"], function() {
     }
     return result;
   }
-  function defineClass(definingCode) {
-    return Object.defineProperty({}, "_", {
+  function defineClass(exports, definingCode) {
+    Object.defineProperty(exports, "_", {
       configurable: true,
       get: function() {
         var config = definingCode();
