@@ -634,8 +634,8 @@ define('runtime/AS3',["./es5-polyfills"], function() {
     }
     return result;
   }
-  function defineClass(definingCode) {
-    return Object.defineProperty({}, "_", {
+  function defineClass(exports, definingCode) {
+    Object.defineProperty(exports, "_", {
       configurable: true,
       get: function() {
         var config = definingCode();
@@ -680,11 +680,11 @@ define('runtime/AS3',["./es5-polyfills"], function() {
   }
 
   function bind(object, method, boundMethodName) {
-    var boundMethod = object[boundMethodName];
-    if (!boundMethod) {
-      boundMethod = method.bind(object);
-      Object.defineProperty(object, boundMethodName, { value: boundMethod });
+    if (object.hasOwnProperty(boundMethodName)) {
+      return object[boundMethodName];
     }
+    var boundMethod = method.bind(object);
+    Object.defineProperty(object, boundMethodName, { value: boundMethod });
     return boundMethod;
   }
 
@@ -737,19 +737,19 @@ define('classes/com/acme/I',["runtime/AS3"], function(AS3) {
   return AS3.interface_("com.acme.I", []);
 });
 
-define('classes/com/acme/A',["runtime/AS3", "./I", "classes/trace"],
-        function(AS3,     I,           trace) {
+define('classes/com/acme/A',["exports", "runtime/AS3", "./I", "classes/trace"],
+        function($exports,  AS3,     I,           trace) {
   
 
-  return AS3.class_(function() {
+  AS3.class_($exports, function() {
     // constructor / class:
     function A(msg/*:String*/) {
-/* 5*/    this.set$msg(msg); // rewritten property set access
+/* 5*/    this.set$msg(msg); // rewritten property set access; in ES5 environments, this.msg = msg works, too.
     }
 
     // private method:
     function secret(n) {
-/*21*/    return this.get$msg() + n; // complemented "this." and rewritten property get access
+/*21*/    return this.get$msg() + n; // complemented "this." and rewritten property get access; in ES5 environments, this.msg works, too.
     }
 
     return {
@@ -807,11 +807,11 @@ define('classes/com/acme/sub/ISub',["runtime/AS3", "../I"], function(AS3, I) {
   return AS3.interface_("com.acme.sub.ISub", [I]);
 });
 
-define('classes/com/acme/B',["runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
-        function(AS3,           trace,     A_,        IOther,         ISub) {
+define('classes/com/acme/B',["exports", "runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
+        function($exports,  AS3,           trace,     A_,        IOther,         ISub) {
   
 
-  return AS3.class_(function() {
+  AS3.class_($exports, function() {
     var A = A_._ || A_.get$_(); // initialize super class. Only do this for super class, as there can be no cyclic dependencies!
     // constructor / class:
     function B(msg, count) {
@@ -851,10 +851,10 @@ define('classes/com/acme/B',["runtime/AS3", "classes/trace", "./A", "./sub/IOthe
 });
 
 
-define('classes/HelloWorld',["runtime/AS3", "./trace","./com/acme/B","./com/acme/A","./com/acme/I","./com/acme/sub/IOther","./com/acme/sub/ISub"],
-  function(      AS3,     trace,             B_,            A_,            I,                 IOther,                 ISub) {
+define('classes/HelloWorld',["exports", "runtime/AS3", "./trace","./com/acme/B","./com/acme/A","./com/acme/I","./com/acme/sub/IOther","./com/acme/sub/ISub"],
+  function($exports,        AS3,     trace,             B_,            A_,            I,                 IOther,                 ISub) {
   
-  return AS3.class_(function() {
+  AS3.class_($exports, function() {
     var A, B;
     function HelloWorld() {
       trace((B = B_._ || B_.get$_()).now);
@@ -864,13 +864,13 @@ define('classes/HelloWorld',["runtime/AS3", "./trace","./com/acme/B","./com/acme
       trace("b = new B('hello '): " + b);
       trace("b.foo(3): " + b.foo(3));
       trace("b.baz(): " + b.baz());
-      trace("b is A: " + AS3.is(b, A = A_._ || A.get$_()));
+      trace("b is A: " + AS3.is(b, A = A_._ || A_.get$_()));
       trace("b is B: " + AS3.is(b, B));
       trace("b is I: " + AS3.is(b, I));
       trace("b is ISub: " + AS3.is(b, ISub));
       trace("b is IOther: " + AS3.is(b, IOther));
 
-      var a = new A_._('123');
+      var a = new A('123');
       trace("a = new A('123'): " + a);
       trace("a is A: " + AS3.is(a, A));
       trace("a is B: " + AS3.is(a, B));
