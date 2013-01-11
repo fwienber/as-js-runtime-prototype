@@ -1,7 +1,8 @@
 ({
   baseUrl: "amd",
   optimize: "none",
+  useSourceUrl: true,
   out: "hello-world-all.js",
-  name: "almond",
+  name: "runtime/almond",
   include: "application"
 })
