@@ -398,26 +398,606 @@ var requirejs, require, define;
 
 define("runtime/almond", function(){});
 
-eval("// As a polyfill plugin, this breaks normal modularity by altering globals for sake of enabling standards on non-supporting browsers\r\ndefine(\'runtime/es5-polyfills\',[],function () {\r\n  \"use strict\";\r\n  //----------------------------------------------------------------------\r\n  //\r\n  // ECMAScript 5 Polyfills\r\n  //\r\n  //----------------------------------------------------------------------\r\n\r\n  if (!Array.prototype.every) {\r\n    Array.prototype.every = function every(fun /*, thisp */) {\r\n      var t, len, i, thisp;\r\n      if (this == null) {\r\n        throw new TypeError();\r\n      }\r\n      t = Object(this);\r\n      len = t.length >>> 0;\r\n      if (typeof fun != \"function\") {\r\n        throw new TypeError();\r\n      }\r\n\r\n      thisp = arguments[1];\r\n      for (i = 0; i < len; i++) {\r\n        if (i in t && !fun.call(thisp, t[i], i, t)) {\r\n          return false;\r\n        }\r\n      }\r\n      return true;\r\n    };\r\n  }\r\n  if (!Array.prototype.forEach) {\r\n    Array.prototype.forEach = function forEach(callback, thisArg) {\r\n      \"use strict\";\r\n      var T, k, O, len, kValue;\r\n\r\n      if (this == null) {\r\n        throw new TypeError(\"this is null or not defined\");\r\n      }\r\n\r\n      // 1. Let O be the result of calling ToObject passing the |this| value as the argument.\r\n      O = Object(this);\r\n\r\n      // 2. Let lenValue be the result of calling the Get internal method of O with the argument \"length\".\r\n      // 3. Let len be ToUint32(lenValue).\r\n      len = O.length >>> 0; // Hack to convert O.length to a UInt32\r\n\r\n      // 4. If IsCallable(callback) is false, throw a TypeError exception.\r\n      // See: http://es5.github.com/#x9.11\r\n      if (Object.prototype.toString.call(callback) !== \"[object Function]\") {\r\n        throw new TypeError(callback + \" is not a function\");\r\n      }\r\n\r\n      // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.\r\n      if (thisArg) {\r\n        T = thisArg;\r\n      }\r\n\r\n      // 6. Let k be 0\r\n      k = 0;\r\n\r\n      // 7. Repeat, while k < len\r\n      while (k < len) {\r\n\r\n        // a. Let Pk be ToString(k).\r\n        //   This is implicit for LHS operands of the in operator\r\n        // b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.\r\n        //   This step can be combined with c\r\n        // c. If kPresent is true, then\r\n        if (Object.prototype.hasOwnProperty.call(O, k)) {\r\n\r\n          // i. Let kValue be the result of calling the Get internal method of O with argument Pk.\r\n          kValue = O[ k ];\r\n\r\n          // ii. Call the Call internal method of callback with T as the this value and\r\n          // argument list containing kValue, k, and O.\r\n          callback.call(T, kValue, k, O);\r\n        }\r\n        // d. Increase k by 1.\r\n        k++;\r\n      }\r\n      // 8. return undefined\r\n    };\r\n  }\r\n  if (!Array.prototype.map) {\r\n    Array.prototype.map = function map(callback, thisArg) {\r\n      \"use strict\";\r\n      var T, A, k, kValue, mappedValue, O, len;\r\n      if (this === null || typeof this === \'undefined\') {\r\n        throw new TypeError(\" this is null or not defined\");\r\n      }\r\n      O = Object(this);\r\n      len = O.length >>> 0;\r\n\r\n      if (Object.prototype.toString.call(callback) !== \"[object Function]\") {\r\n        throw new TypeError(callback + \" is not a function\");\r\n      }\r\n      if (thisArg) {\r\n        T = thisArg;\r\n      }\r\n\r\n      A = new Array(len);\r\n      k = 0;\r\n      while (k < len) {\r\n        if (k in O) {\r\n          kValue = O[ k ];\r\n          mappedValue = callback.call(T, kValue, k, O);\r\n          A[ k ] = mappedValue;\r\n        }\r\n        k++;\r\n      }\r\n      return A;\r\n    };\r\n  }\r\n\r\n  //----------------------------------------------------------------------\r\n  // ES5 15.2 Object Objects\r\n  //----------------------------------------------------------------------\r\n\r\n  //\r\n  // ES5 15.2.3 Properties of the Object Constructor\r\n  //\r\n\r\n  if (!Object.create) {\r\n\r\n    // if Object.create is not defined, *always* also redefine Object.defineProperty and Object.defineProperties,\r\n    // as IE8 implements them only for DOM objects!\r\n\r\n    // ES5 15.2.3.5 Object.create ( O [, Properties] )\r\n    Object.create = function (prototype, properties) {\r\n      if (prototype !== Object(prototype)) { throw new TypeError(); }\r\n      /** @constructor */\r\n      function Ctor() {}\r\n      Ctor.prototype = prototype;\r\n      var o = new Ctor();\r\n      o.constructor = Ctor;\r\n      if (arguments.length > 1) {\r\n        if (properties !== Object(properties)) { throw new TypeError(); }\r\n        Object.defineProperties(o, properties);\r\n      }\r\n      return o;\r\n    };\r\n\r\n    // ES 15.2.3.6 Object.defineProperty ( O, P, Attributes )\r\n    // Partial support for most common case - getters, setters, and values\r\n    var orig = Object.defineProperty;\r\n    Object.defineProperty = function (o, prop, desc) {\r\n      // In IE8 try built-in implementation for defining properties on DOM prototypes.\r\n      if (orig) { try { return orig(o, prop, desc); } catch (e) {} }\r\n\r\n      if (o !== Object(o)) { throw new TypeError(\"Object.defineProperty called on non-object\"); }\r\n      if ((\'get\' in desc)) {\r\n        if (Object.prototype.__defineGetter__) {\r\n          Object.prototype.__defineGetter__.call(o, prop, desc.get);\r\n        } else {\r\n          o[\"get$\" + prop] = desc.get;\r\n        }\r\n      }\r\n      if ((\'set\' in desc)) {\r\n        if (Object.prototype.__defineSetter__) {\r\n          Object.prototype.__defineSetter__.call(o, prop, desc.set);\r\n        } else {\r\n          o[\"set$\" + prop] = desc.set;\r\n        }\r\n      }\r\n      if (\'value\' in desc) {\r\n        o[prop] = desc.value;\r\n      }\r\n      return o;\r\n    };\r\n\r\n    // ES 15.2.3.7 Object.defineProperties ( O, Properties )\r\n    Object.defineProperties = function (o, properties) {\r\n      if (o !== Object(o)) {\r\n        throw new TypeError(\"Object.defineProperties called on non-object\");\r\n      }\r\n      var name;\r\n      for (name in properties) {\r\n        if (Object.prototype.hasOwnProperty.call(properties, name)) {\r\n          Object.defineProperty(o, name, properties[name]);\r\n        }\r\n      }\r\n      return o;\r\n    };\r\n  }\r\n\r\n  //----------------------------------------------------------------------\r\n  // ES5 15.3 Function Objects\r\n  //----------------------------------------------------------------------\r\n\r\n  // ES5 15.3.4.5 Function.prototype.bind ( thisArg [, arg1 [, arg2, ... ]] )\r\n  // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind\r\n  if (!Function.prototype.bind) {\r\n    Function.prototype.bind = function bind (o) {\r\n      if (typeof this !== \'function\') { throw new TypeError(\"Bind must be called on a function\"); }\r\n      var slice = [].slice,\r\n              args = slice.call(arguments, 1),\r\n              self = this,\r\n              bound = function () {\r\n                return self.apply(this instanceof nop ? this : (o || {}),\r\n                        args.concat(slice.call(arguments)));\r\n              };\r\n\r\n      /** @constructor */\r\n      function nop() {}\r\n      nop.prototype = self.prototype;\r\n\r\n      bound.prototype = new nop();\r\n\r\n      return bound;\r\n    };\r\n  }\r\n});\r\n\n//@ sourceURL=/runtime/es5-polyfills.js");
+define('native',[],function() {
+  function global(name) {
+    var ref = this; // global object
+    var props = name.split('.');
+    var pl = props.length;
+    try {
+      for (var i = 0; ref && i < pl; i++) {
+        ref = ref[props[i]];
+      }
+      return ref;
+    } catch(e) {
+      // ignore
+    }
+    return undefined;
+  }
+  return {
+    load: function (name, req, load, config) {
+      
+      var parts = name.split('@');
+      var variable = parts[0];
+      var module = parts[1];
+      if (config.isBuild) {
+        if (!module || !config.linkNative) {
+          load();
+        } else {
+          // as it may be needed, always load module and return:
+          req([module], load);
+        }
+      } else {
+        var value = global(variable);
+        if (value !== undefined || !module) {
+          load(value);
+        } else {
+          // load module and try again to resolve global variable:
+          req([module], function () {
+            load(global(variable));
+          });
+        }
+      }
+    }
+  };
+});
+// As a polyfill plugin, this breaks normal modularity by altering globals for sake of enabling standards on non-supporting browsers
+define('runtime/es5-polyfills',[],function () {
+  
+  //----------------------------------------------------------------------
+  //
+  // ECMAScript 5 Polyfills
+  //
+  //----------------------------------------------------------------------
 
-eval("define(\'runtime/AS3\',[\"./es5-polyfills\"], function() {\r\n  \"use strict\";\r\n  function toString() {\r\n    return \"[Class \" + this.name + \"]\";\r\n  }\r\n  function convertShortcuts(propertyDescriptors) {\r\n    var result = {};\r\n    if (propertyDescriptors) {\r\n      for (var name in propertyDescriptors) {\r\n        var propertyDescriptor = propertyDescriptors[name];\r\n        result[name] = propertyDescriptor !== null && typeof propertyDescriptor === \"object\" ? propertyDescriptor\r\n          // anything *not* an object is a shortcut for a property descriptor with that value (non-writable, non-enumerable, non-configurable):\r\n                : { value: propertyDescriptor };\r\n        if (propertyDescriptor.get) {\r\n          result[\"get$\" + name] = { value: propertyDescriptor.get };\r\n        }\r\n        if (propertyDescriptor.set) {\r\n          result[\"set$\" + name] = { value: propertyDescriptor.set };\r\n        }\r\n      }\r\n    }\r\n    return result;\r\n  }\r\n  function defineClass(exports, definingCode) {\r\n    Object.defineProperty(exports, \"_\", {\r\n      configurable: true,\r\n      get: function() {\r\n        var config = definingCode();\r\n        var members = convertShortcuts(config.members);\r\n        var clazz = members.constructor.value;\r\n        Object.defineProperty(this, \"_\", { value: clazz });\r\n        var extends_ = config.extends_ || Object; // super class\r\n        var implements_ = config.implements_ ? typeof config.implements_ === \"function\" ? [config.implements_] : config.implements_ : [];\r\n        var staticMembers = convertShortcuts(config.staticMembers);\r\n        // create set of all interfaces implemented by this class\r\n        var $implements = extends_.$implements ? Object.create(extends_.$implements) : {};\r\n        implements_.forEach(function(i) { i($implements); });\r\n        staticMembers.$implements = { value: $implements };\r\n\r\n        staticMembers.toString = { value: toString }; // add Class#toString()\r\n        Object.defineProperties(clazz, staticMembers);   // add static members\r\n        clazz.prototype = Object.create(extends_.prototype, members); // establish inheritance prototype chain and add instance members\r\n\r\n        var staticCode = config.staticCode;\r\n        // execute static initializers and code:\r\n        staticCode && staticCode();\r\n        return clazz;\r\n      }\r\n    });\r\n  }\r\n\r\n  function defineInterface(fullyQualifiedName, extends_) {\r\n    function Interface($implements) {\r\n      extends_.forEach(function(i) { i($implements); });\r\n      $implements[fullyQualifiedName] = true;\r\n      return $implements;\r\n    }\r\n    Interface.isInstance = function(object) {\r\n      return object !== null && typeof object === \"object\" &&\r\n              !!object.constructor.$implements &&\r\n              fullyQualifiedName in object.constructor.$implements;\r\n    };\r\n    Interface.toString = function toString() {\r\n      return \"[Interface \" + fullyQualifiedName + \"]\";\r\n    };\r\n    return Interface;\r\n  }\r\n\r\n  function bind(object, method, boundMethodName) {\r\n    if (object.hasOwnProperty(boundMethodName)) {\r\n      return object[boundMethodName];\r\n    }\r\n    var boundMethod = method.bind(object);\r\n    Object.defineProperty(object, boundMethodName, { value: boundMethod });\r\n    return boundMethod;\r\n  }\r\n\r\n  function is(object, type) {\r\n    return !!type && object !== undefined && object !== null &&\r\n      // instanceof returns false negatives in some browsers, so check constructor property, too:\r\n      (object instanceof type || object.constructor === type ||\r\n      // \"type\" may be an interface:\r\n      typeof type.isInstance === \"function\" && type.isInstance(object));\r\n  }\r\n\r\n  function as(object, type) {\r\n    return is(object, type) ? object : null;\r\n  }\r\n\r\n  function cast(type, object) {\r\n    if (object === undefined || object === null) {\r\n      return null;\r\n    }\r\n    if (object instanceof type || object.constructor === type ||\r\n      // \"type\" may be an interface:\r\n      typeof type.isInstance === \"function\" && type.isInstance(object)) {\r\n      return object;\r\n    }\r\n    throw new TypeError(\"\'\" + object + \"\' cannot be cast to \" + type + \".\");\r\n  }\r\n\r\n  return {\r\n    class_: defineClass,\r\n    interface_: defineInterface,\r\n    as: as,\r\n    cast: cast,\r\n    is: is,\r\n    bind: bind\r\n  }\r\n});\r\n\n//@ sourceURL=/runtime/AS3.js");
+  if (!Array.prototype.every) {
+    Array.prototype.every = function every(fun /*, thisp */) {
+      var t, len, i, thisp;
+      if (this == null) {
+        throw new TypeError();
+      }
+      t = Object(this);
+      len = t.length >>> 0;
+      if (typeof fun != "function") {
+        throw new TypeError();
+      }
 
-eval("define(\'classes/trace\',[\"runtime/es5-polyfills\"], function() {\r\n  \"use strict\";\r\n  return function trace() {\r\n    var msg = Array.prototype.map.call(arguments, String).join(\" \");\r\n    var logWindow = document.createElement(\"div\");\r\n    logWindow.appendChild(document.createTextNode(msg));\r\n    document.body.appendChild(logWindow);\r\n  }\r\n});\r\n\n//@ sourceURL=/classes/trace.js");
+      thisp = arguments[1];
+      for (i = 0; i < len; i++) {
+        if (i in t && !fun.call(thisp, t[i], i, t)) {
+          return false;
+        }
+      }
+      return true;
+    };
+  }
+  if (!Array.prototype.forEach) {
+    Array.prototype.forEach = function forEach(callback, thisArg) {
+      
+      var T, k, O, len, kValue;
 
-eval("define(\'classes/com/acme/I\',[\"runtime/AS3\"], function(AS3) {\r\n  \"use strict\";\r\n  return AS3.interface_(\"com.acme.I\", []);\r\n});\r\n\n//@ sourceURL=/classes/com/acme/I.js");
+      if (this == null) {
+        throw new TypeError("this is null or not defined");
+      }
 
-eval("define(\'classes/com/acme/A\',[\"exports\", \"runtime/AS3\", \"./I\", \"classes/trace\"],\r\n        function($exports,  AS3,     I,           trace) {\r\n  \"use strict\";\r\n\r\n  AS3.class_($exports, function() {\r\n    // constructor / class:\r\n    function A(msg/*:String*/) {\r\n/* 5*/    this.set$msg(msg); // rewritten property set access; in ES5 environments, this.msg = msg works, too.\r\n    }\r\n\r\n    // private method:\r\n    function secret(n) {\r\n/*21*/    return this.get$msg() + n; // complemented \"this.\" and rewritten property get access; in ES5 environments, this.msg works, too.\r\n    }\r\n\r\n    return {\r\n      implements_: I,\r\n      members: {\r\n        constructor: A,\r\n        // define private field (renamed!) with typed default value:\r\n        _msg$1: { value: 0, writable: true },\r\n\r\n        // property defined through public getter/setter:\r\n        msg: {\r\n          // public getter:\r\n          get: function get$msg()/*:String*/ {\r\n/*11*/      return String(this._msg$1); // rewritten private field access\r\n          },\r\n          // public setter\r\n          set: function set$msg(value/*:String*/)/*:void*/ {\r\n/*17*/      this._msg$1 = parseInt(value, 10) >> 0; // rewritten private field access + int coercion\r\n          }\r\n        },\r\n\r\n        // public method:\r\n        foo: function foo(x) {\r\n/*25*/    return secret.call(this, A.bar(x)); // rewritten private method call\r\n        },\r\n\r\n        // public method:\r\n        baz: function baz() {\r\n/*29*/    var tmp = AS3.bind(this, secret, \"secret$1\"); // rewritten method access w/o invocation\r\n/*30*/    return tmp(\"-bound\");\r\n        }\r\n      },\r\n\r\n      staticMembers: {\r\n        // public static method:\r\n        bar: function bar(x) {\r\n/*34*/    return x + 1;\r\n        }\r\n      },\r\n\r\n      staticCode: function() {\r\n/*14*/  trace(\"Class A is initialized!\");\r\n      }\r\n    };\r\n  });\r\n});\r\n\n//@ sourceURL=/classes/com/acme/A.js");
+      // 1. Let O be the result of calling ToObject passing the |this| value as the argument.
+      O = Object(this);
 
-eval("define(\'classes/com/acme/sub/IOther\',[\"runtime/AS3\"], function(AS3) {\r\n  \"use strict\";\r\n  return AS3.interface_(\"com.acme.sub.IOther\", []);\r\n});\r\n\n//@ sourceURL=/classes/com/acme/sub/IOther.js");
+      // 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
+      // 3. Let len be ToUint32(lenValue).
+      len = O.length >>> 0; // Hack to convert O.length to a UInt32
 
-eval("define(\'classes/com/acme/sub/ISub\',[\"runtime/AS3\", \"../I\"], function(AS3, I) {\r\n  \"use strict\";\r\n  return AS3.interface_(\"com.acme.sub.ISub\", [I]);\r\n});\r\n\n//@ sourceURL=/classes/com/acme/sub/ISub.js");
+      // 4. If IsCallable(callback) is false, throw a TypeError exception.
+      // See: http://es5.github.com/#x9.11
+      if (Object.prototype.toString.call(callback) !== "[object Function]") {
+        throw new TypeError(callback + " is not a function");
+      }
 
-eval("define(\'classes/com/acme/B\',[\"exports\", \"runtime/AS3\", \"classes/trace\", \"./A\", \"./sub/IOther\", \"./sub/ISub\"],\r\n        function($exports,  AS3,           trace,     A_,        IOther,         ISub) {\r\n  \"use strict\";\r\n\r\n  AS3.class_($exports, function() {\r\n    var A = A_._ || A_.get$_(); // initialize super class. Only do this for super class, as there can be no cyclic dependencies!\r\n    // constructor / class:\r\n    function B(msg, count) {\r\n/*19*/    this.barfoo = A.bar(3); // inlined field initializer\r\n/*12*/    A.call(this, msg); // rewritten super call\r\n/*13*/    this.count = count;\r\n/*14*/    trace(\"now: \" + B.now);\r\n    }\r\n\r\n    return { extends_: A, implements_: [IOther, ISub],\r\n      members: {\r\n        constructor: B,\r\n        // public field with typed default value:\r\n        count:  { value: 0, writable: true },\r\n\r\n        // public method (overriding):\r\n        foo: function foo(x) {\r\n/*22*/    return A.prototype.foo.call(this, x + 2) + \"-sub\"; // rewritten super method call\r\n        }\r\n      },\r\n\r\n      staticMembers: {\r\n        // public static method:\r\n        nowPlusOne: function nowPlusOne() {\r\n/* 8*/    return new Date(B.now.getTime() + 60*60*1000);\r\n        },\r\n\r\n        // public static field:\r\n        now: { value: null, writable: true }\r\n      },\r\n\r\n      staticCode: function() {\r\n/*25*/    B.now = new Date();\r\n      }\r\n    };\r\n  });\r\n});\r\n\n//@ sourceURL=/classes/com/acme/B.js");
+      // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
+      if (thisArg) {
+        T = thisArg;
+      }
 
-eval("\"use strict\";\r\ndefine(\'classes/HelloWorld\',[\"exports\", \"runtime/AS3\", \"./trace\",\"./com/acme/B\",\"./com/acme/A\",\"./com/acme/I\",\"./com/acme/sub/IOther\",\"./com/acme/sub/ISub\"],\r\n  function($exports,        AS3,     trace,             B_,            A_,            I,                 IOther,                 ISub) {\r\n  \"use strict\";\r\n  AS3.class_($exports, function() {\r\n    var A, B;\r\n    function HelloWorld() {\r\n      trace((B = B_._ || B_.get$_()).now);\r\n      trace(B.nowPlusOne());\r\n\r\n      var b = new B(\'hello \');\r\n      trace(\"b = new B(\'hello \'): \" + b);\r\n      trace(\"b.foo(3): \" + b.foo(3));\r\n      trace(\"b.baz(): \" + b.baz());\r\n      trace(\"b is A: \" + AS3.is(b, A = A_._ || A_.get$_()));\r\n      trace(\"b is B: \" + AS3.is(b, B));\r\n      trace(\"b is I: \" + AS3.is(b, I));\r\n      trace(\"b is ISub: \" + AS3.is(b, ISub));\r\n      trace(\"b is IOther: \" + AS3.is(b, IOther));\r\n\r\n      var a = new A(\'123\');\r\n      trace(\"a = new A(\'123\'): \" + a);\r\n      trace(\"a is A: \" + AS3.is(a, A));\r\n      trace(\"a is B: \" + AS3.is(a, B));\r\n      trace(\"a is I: \" + AS3.is(a, I));\r\n      trace(\"a is ISub: \" + AS3.is(a, ISub));\r\n      trace(\"a is IOther: \" + AS3.is(a, IOther));\r\n    }\r\n    return {\r\n      members: {\r\n        constructor: HelloWorld\r\n      }\r\n    };\r\n  });\r\n});\r\n\n//@ sourceURL=/classes/HelloWorld.js");
+      // 6. Let k be 0
+      k = 0;
 
+      // 7. Repeat, while k < len
+      while (k < len) {
+
+        // a. Let Pk be ToString(k).
+        //   This is implicit for LHS operands of the in operator
+        // b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.
+        //   This step can be combined with c
+        // c. If kPresent is true, then
+        if (Object.prototype.hasOwnProperty.call(O, k)) {
+
+          // i. Let kValue be the result of calling the Get internal method of O with argument Pk.
+          kValue = O[ k ];
+
+          // ii. Call the Call internal method of callback with T as the this value and
+          // argument list containing kValue, k, and O.
+          callback.call(T, kValue, k, O);
+        }
+        // d. Increase k by 1.
+        k++;
+      }
+      // 8. return undefined
+    };
+  }
+  if (!Array.prototype.map) {
+    Array.prototype.map = function map(callback, thisArg) {
+      
+      var T, A, k, kValue, mappedValue, O, len;
+      if (this === null || typeof this === 'undefined') {
+        throw new TypeError(" this is null or not defined");
+      }
+      O = Object(this);
+      len = O.length >>> 0;
+
+      if (Object.prototype.toString.call(callback) !== "[object Function]") {
+        throw new TypeError(callback + " is not a function");
+      }
+      if (thisArg) {
+        T = thisArg;
+      }
+
+      A = new Array(len);
+      k = 0;
+      while (k < len) {
+        if (k in O) {
+          kValue = O[ k ];
+          mappedValue = callback.call(T, kValue, k, O);
+          A[ k ] = mappedValue;
+        }
+        k++;
+      }
+      return A;
+    };
+  }
+
+  //----------------------------------------------------------------------
+  // ES5 15.2 Object Objects
+  //----------------------------------------------------------------------
+
+  //
+  // ES5 15.2.3 Properties of the Object Constructor
+  //
+
+  if (!Object.create) {
+
+    // if Object.create is not defined, *always* also redefine Object.defineProperty and Object.defineProperties,
+    // as IE8 implements them only for DOM objects!
+
+    // ES5 15.2.3.5 Object.create ( O [, Properties] )
+    Object.create = function (prototype, properties) {
+      if (prototype !== Object(prototype)) { throw new TypeError(); }
+      /** @constructor */
+      function Ctor() {}
+      Ctor.prototype = prototype;
+      var o = new Ctor();
+      o.constructor = Ctor;
+      if (arguments.length > 1) {
+        if (properties !== Object(properties)) { throw new TypeError(); }
+        Object.defineProperties(o, properties);
+      }
+      return o;
+    };
+
+    // ES 15.2.3.6 Object.defineProperty ( O, P, Attributes )
+    // Partial support for most common case - getters, setters, and values
+    var orig = Object.defineProperty;
+    Object.defineProperty = function (o, prop, desc) {
+      // In IE8 try built-in implementation for defining properties on DOM prototypes.
+      if (orig) { try { return orig(o, prop, desc); } catch (e) {} }
+
+      if (o !== Object(o)) { throw new TypeError("Object.defineProperty called on non-object"); }
+      if (('get' in desc)) {
+        if (Object.prototype.__defineGetter__) {
+          Object.prototype.__defineGetter__.call(o, prop, desc.get);
+        } else {
+          o[prop + "$get"] = desc.get;
+        }
+      }
+      if (('set' in desc)) {
+        if (Object.prototype.__defineSetter__) {
+          Object.prototype.__defineSetter__.call(o, prop, desc.set);
+        } else {
+          o[prop + "$set"] = desc.set;
+        }
+      }
+      if ('value' in desc) {
+        o[prop] = desc.value;
+      }
+      return o;
+    };
+
+    // ES 15.2.3.7 Object.defineProperties ( O, Properties )
+    Object.defineProperties = function (o, properties) {
+      if (o !== Object(o)) {
+        throw new TypeError("Object.defineProperties called on non-object");
+      }
+      var name;
+      for (name in properties) {
+        if (Object.prototype.hasOwnProperty.call(properties, name)) {
+          Object.defineProperty(o, name, properties[name]);
+        }
+      }
+      return o;
+    };
+  }
+
+  //----------------------------------------------------------------------
+  // ES5 15.3 Function Objects
+  //----------------------------------------------------------------------
+
+  // ES5 15.3.4.5 Function.prototype.bind ( thisArg [, arg1 [, arg2, ... ]] )
+  // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
+  if (!Function.prototype.bind) {
+    Function.prototype.bind = function bind (o) {
+      if (typeof this !== 'function') { throw new TypeError("Bind must be called on a function"); }
+      var slice = [].slice,
+              args = slice.call(arguments, 1),
+              self = this,
+              bound = function () {
+                return self.apply(this instanceof nop ? this : (o || {}),
+                        args.concat(slice.call(arguments)));
+              };
+
+      /** @constructor */
+      function nop() {}
+      nop.prototype = self.prototype;
+
+      bound.prototype = new nop();
+
+      return bound;
+    };
+  }
+});
+
+define('runtime/AS3',["require", "native!Object.defineProperties@./es5-polyfills"], function(require) {
+  
+  function metaToString() {
+    return this.qName;
+  }
+  function toString() {
+    return "[Class " + this.$class.name + "]";
+  }
+  function convertShortcut(propertyDescriptor) {
+    return propertyDescriptor !== null && typeof propertyDescriptor === "object" ? propertyDescriptor
+      // anything *not* an object is a shortcut for a property descriptor with that value (non-writable, non-enumerable, non-configurable):
+            : { value: propertyDescriptor }
+  }
+  function convertShortcuts(propertyDescriptors) {
+    var result = {};
+    if (propertyDescriptors) {
+      for (var name in propertyDescriptors) {
+        var propertyDescriptor = propertyDescriptors[name];
+        result[name] = convertShortcut(propertyDescriptor);
+        if (propertyDescriptor.get) {
+          result[name + "$get"] = { value: propertyDescriptor.get };
+        }
+        if (propertyDescriptor.set) {
+          result[name + "$set"] = { value: propertyDescriptor.set };
+        }
+        if (name !== "constructor") {
+          result[name].enumerable = true; // TODO: only for debugging, save describeType data elsewhere!
+        }
+      }
+    }
+    return result;
+  }
+  var metadataHandlers = {};
+  function registerMetadataHandler(handler) {
+    metadataHandlers[handler.metadata] = handler;
+  }
+  function handleMetadata(value) {
+    if (value && value.$class) {
+      var metadata = value.$class.metadata;
+      if (metadata) {
+        for (var key in metadata) {
+          var metadataHandler = metadataHandlers[key];
+          if (metadataHandler) {
+            metadataHandler(value, metadata[key]);
+          }
+        }
+      }
+    }
+    return value;
+  }
+  function compilationUnit(exports, definingCode) {
+    function getter() {
+      var result;
+      definingCode(function(value) {
+        result = convertShortcut(value);
+        Object.defineProperty(exports, "_", result);
+      });
+      return handleMetadata(result.value);
+    }
+    Object.defineProperty(exports, "_", {
+      configurable: true,
+      get: getter,
+      set: function(value) {
+        getter(); // initialize, but ignore resulting value as it is overwritten immediately!
+        exports._ = value;
+      }
+    });
+  }
+
+  function defineClass(config) {
+        var members = convertShortcuts(config.members);
+        var clazz = members.constructor.value;
+        var extends_ = config.extends_ || Object; // super class
+        var implements_ = config.implements_ || [];
+        // create set of all interfaces implemented by this class
+        var $implements = extends_.$class && extends_.$class.implements_ ? Object.create(extends_.$class.implements_ ) : {};
+        implements_.forEach(function(i) { i.addInterfaces($implements); });
+        var staticMembers = convertShortcuts(config.staticMembers);
+        // add some meta information under reserved static field "$class":
+        var qName = config.package_ ? config.package_ + "." + config.class_ : config.class_;
+        staticMembers.$class = { value: {
+          metadata: config.metadata || {},
+          extends_: extends_,
+          implements_: $implements,
+          name: config.class_,
+          qName: qName,
+          toString: metaToString
+        }};
+        staticMembers.toString = { value: toString }; // add Class#toString()
+        Object.defineProperties(clazz, staticMembers);   // add static members
+        clazz.prototype = Object.create(extends_.prototype, members); // establish inheritance prototype chain and add instance members
+        return clazz;
+  }
+
+  function addInterfaces($implements) {
+    for (var interface_ in this.interfaces) {
+      $implements[interface_] = true;
+    }
+    return $implements;
+  }
+
+  function defineInterface(exports, config) {
+    var qName = config.package_ ? config.package_ + "." + config.interface_ : config.interface_;
+    var interfaces = {};
+    interfaces[qName] = true;
+    config.extends_ && config.extends_.forEach(function (i) {
+      i.addInterfaces(interfaces);
+    });
+    Object.defineProperties(exports, convertShortcuts({
+      $class: { value: Object.defineProperties({}, convertShortcuts({
+        name: config.interface_,
+        qName: qName,
+        toString: metaToString
+      }))},
+      interfaces: { value: interfaces },
+      addInterfaces: addInterfaces,
+      toString: toString
+    }));
+  }
+
+  function bind(object, boundMethodName) {
+    if (object.hasOwnProperty(boundMethodName)) {
+      return object[boundMethodName];
+    }
+    var boundMethod = object[boundMethodName].bind(object);
+    Object.defineProperty(object, boundMethodName, {
+      // enumerable: true, // TODO: for debugging only
+      value: boundMethod
+    });
+    return boundMethod;
+  }
+
+  /**
+   * Internal utility to check whether the non-null/-undefined "object" is an instance of the given type.
+   * Note that ActionScript, in contrast to JavaScript, coerces primitives to objects before doing the check!
+   */
+  function isInstance(type, object) {
+    //noinspection FallthroughInSwitchStatementJS
+    switch (typeof object) {
+      case "boolean":
+      case "number":
+      case "string":
+        object = Object(object);
+        // fall through!
+      case "object":
+      case "function":
+        // "type" may be an interface:
+        if (typeof type === "object") {
+          return !!object.constructor.$class &&
+                  type.$class.qName in object.constructor.$class.implements_;
+        }
+        // type is a Class: instanceof returns false negatives in some browsers, so check constructor property, too:
+        return object instanceof type || object.constructor === type;
+    }
+    return false;
+  }
+
+  function is(object, type) {
+    return object !== undefined && object !== null && isInstance(type, object);
+  }
+
+  function as(object, type) {
+    return is(object, type) ? object : null;
+  }
+
+  function cast(type, object) {
+    if (object === undefined || object === null) {
+      return null;
+    }
+    if (isInstance(type, object)) {
+      return object;
+    }
+    throw new TypeError("'" + object + "' cannot be cast to " + type + ".");
+  }
+
+  return {
+    compilationUnit: compilationUnit,
+    class_: defineClass,
+    interface_: defineInterface,
+    as: as,
+    cast: cast,
+    is: is,
+    bind: bind
+  }
+});
+
+define('classes/trace',["native!Array.prototype.map@runtime/es5-polyfills"], function() {
+  
+  return function trace() {
+    var msg = Array.prototype.map.call(arguments, String).join(" ");
+    var logWindow = document.createElement("div");
+    logWindow.appendChild(document.createTextNode(msg));
+    document.body.appendChild(logWindow);
+  }
+});
+
+define('classes/com/acme/I',["exports","runtime/AS3"], function($exports,AS3) {
+  
+  AS3.interface_($exports, {
+    package_: "com.acme",
+    interface_: "I"
+  });
+});
+
+define('classes/com/acme/A',["exports","runtime/AS3","classes/com/acme/I","native!String","classes/trace","native!parseInt"], function($exports,AS3,I,String,trace,parseInt) {
+  
+  AS3.compilationUnit($exports, function($primaryDeclaration){
+    function A(msg) {
+      this.msg = msg;
+    }
+    $primaryDeclaration(AS3.class_({
+      package_: "com.acme",
+      class_: "A",
+      implements_: [I],
+      members: {
+        constructor: A,
+        _msg$1: {
+          value: 0,
+          writable: true
+        },
+        msg: {
+          get: function msg$get() {
+            return String(this._msg$1);
+          },
+          set: function msg$set(value) {
+            this._msg$1 = parseInt(value, 10);
+          }
+        },
+        secret$1: function secret(n) {
+          return this.msg + n;
+        },
+        foo: function foo(x) {
+          return this.secret$1(A.bar(x));
+        },
+        baz: function baz() {
+          var tmp =AS3.bind( this,"secret$1");
+          return tmp("-bound");
+        }
+      },
+      staticMembers: {
+        bar: function bar(x) {
+          return x + 1;
+        }
+      }
+    }));
+    trace("Class A is initialized!");
+  });
+});
+
+define('classes/com/acme/sub/IOther',["exports","runtime/AS3"], function($exports,AS3) {
+  
+  AS3.interface_($exports, {
+    package_: "com.acme.sub",
+    interface_: "IOther"
+  });
+});
+
+define('classes/com/acme/sub/ISub',["exports","runtime/AS3","classes/com/acme/I"], function($exports,AS3,I) {
+  
+  AS3.interface_($exports, {
+    package_: "com.acme.sub",
+    interface_: "ISub",
+    extends_: [I]
+  });
+});
+
+define('classes/com/acme/B',["exports","runtime/AS3","classes/com/acme/A","classes/com/acme/sub/IOther","classes/com/acme/sub/ISub","native!Date","classes/trace"], function($exports,AS3,A,IOther,ISub,Date,trace) {
+  
+  AS3.compilationUnit($exports, function($primaryDeclaration){
+    function B(msg, count) {
+      Super.call(this,msg);
+      this.barfoo = (A._ || A._$get()).bar(3);
+      this.count = count;
+      trace("now: " + B.now);
+    }
+    var Super = (A._ || A._$get());
+    var super$ = Super.prototype;
+    $primaryDeclaration(AS3.class_({
+      package_: "com.acme",
+      class_: "B",
+      extends_: Super,
+      implements_: [
+        IOther,
+        ISub
+      ],
+      members: {
+        constructor: B,
+        count: {
+          value: 0,
+          writable: true
+        },
+        foo: function foo(x) {
+          return this.foo$2(x + 2) + "-sub";
+        },
+        foo$2: super$.foo
+      },
+      staticMembers: {
+        nowPlusOne: function nowPlusOne$static() {
+          return new Date(B.now.getTime() + 60*60*1000);
+        }
+      }
+    }));
+    B.now=( new Date());
+  });
+});
+
+define('classes/HelloWorld',["exports","runtime/AS3","classes/trace","classes/com/acme/B","classes/com/acme/A","classes/com/acme/I","classes/com/acme/sub/ISub","classes/com/acme/sub/IOther"], function($exports,AS3,trace,B,A,I,ISub,IOther) {
+  
+  AS3.compilationUnit($exports, function($primaryDeclaration){
+    function HelloWorld() {
+      trace((B._||B._$get()).now);
+      trace((B._||B._$get()).nowPlusOne());
+
+      var b = new (B._||B._$get())('hello ');
+      trace("b = new B('hello '):", b);
+      trace("b.foo(3):", b.foo(3));
+      trace("b.baz():", b.baz());
+      trace("b is A:",AS3.is( b,  (A._||A._$get())));
+      trace("b is B:",AS3.is( b,  (B._||B._$get())));
+      trace("b is I:",AS3.is( b,  I));
+      trace("b is ISub:",AS3.is( b,  ISub));
+      trace("b is IOther:",AS3.is( b,  IOther));
+
+      var a = new (A._||A._$get())('123');
+      trace("a = new A('123'):", a);
+      trace("a is A:",AS3.is( a,  (A._||A._$get())));
+      trace("a is B:",AS3.is( a,  (B._||B._$get())));
+      trace("a is I:",AS3.is( a,  I));
+      trace("a is ISub:",AS3.is( a,  ISub));
+      trace("a is IOther:",AS3.is( a,  IOther));
+    }
+    $primaryDeclaration(AS3.class_({
+      class_: "HelloWorld",
+      members: {constructor: HelloWorld}
+    }));
+  });
+});
+
+require.config({
+  paths: {
+    "classes/trace": "classes/trace-console"
+  }
+});
 require(["classes/HelloWorld"], function(HelloWorld_) {
-  new (HelloWorld_._ || HelloWorld_.get$_())();
+  new (HelloWorld_._ || HelloWorld_._$get())();
 });
 
 define("application", function(){});

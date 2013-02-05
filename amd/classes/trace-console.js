@@ -1,10 +1,13 @@
-define(["runtime/es5-polyfills"], function() {
+define(["native!Array.prototype.map@runtime/es5-polyfills"], function() {
   "use strict";
   try {
     console.log("This is FlexJS.");
   } catch (e) {
-    // no global "console" object?
-    return function() {}; // use empty trace() function
+    // no global "console" object? Use print()
+    return function trace() {
+      var msg = Array.prototype.map.call(arguments, String).join(" ");
+      print(msg);
+    };
   }
   return function trace() {
     var msg = Array.prototype.map.call(arguments, String).join(" ");

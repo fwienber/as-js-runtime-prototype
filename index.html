@@ -20,7 +20,20 @@
     <li>Run the <a href="app-debug.html">debuggable application</a></li>
     <li>Run the <a href="app-linked.html">linked application</a></li>
     <li>Run the <a href="app-minified.html">minified application</a></li>
+    <li>Run the <a href="app-minified.html">minified application loaded via RequireJS</a></li>
 </ul>
+
+<p>
+  The linked and the minified version come as a single file, including a minimal AMD implementation
+  called almond.js.
+</p>
+<p>
+  The last version loads the minified application via RequireJS, so at least two JavaScript files are
+  loaded. The advantage is that a third JavaScript file containing ECMAScript 5 polyfills (es5-polyfills.js)
+  is only loaded when needed, e.g. in Internet Explorer 8 and older. In all modern browsers, this obsolete
+  code is not loaded at all. This shrinks the demo application from 10 kb to 5 kb, but of course needs
+  require-min.js, which is 15 kb.
+</p>
 
 </body>
 </html>

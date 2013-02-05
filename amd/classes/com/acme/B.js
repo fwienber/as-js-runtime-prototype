@@ -1,42 +1,39 @@
-define(["exports", "runtime/AS3", "classes/trace", "./A", "./sub/IOther", "./sub/ISub"],
-        function($exports,  AS3,           trace,     A_,        IOther,         ISub) {
+define(["exports","runtime/AS3","classes/com/acme/A","classes/com/acme/sub/IOther","classes/com/acme/sub/ISub","native!Date","classes/trace"], function($exports,AS3,A,IOther,ISub,Date,trace) {
   "use strict";
-
-  AS3.class_($exports, function() {
-    var A = A_._ || A_.get$_(); // initialize super class. Only do this for super class, as there can be no cyclic dependencies!
-    // constructor / class:
+  AS3.compilationUnit($exports, function($primaryDeclaration){
     function B(msg, count) {
-/*19*/    this.barfoo = A.bar(3); // inlined field initializer
-/*12*/    A.call(this, msg); // rewritten super call
-/*13*/    this.count = count;
-/*14*/    trace("now: " + B.now);
+      Super.call(this,msg);
+      this.barfoo = (A._ || A._$get()).bar(3);
+      this.count = count;
+      trace("now: " + B.now);
     }
-
-    return { extends_: A, implements_: [IOther, ISub],
+    var Super = (A._ || A._$get());
+    var super$ = Super.prototype;
+    $primaryDeclaration(AS3.class_({
+      package_: "com.acme",
+      class_: "B",
+      extends_: Super,
+      implements_: [
+        IOther,
+        ISub
+      ],
       members: {
         constructor: B,
-        // public field with typed default value:
-        count:  { value: 0, writable: true },
-
-        // public method (overriding):
-        foo: function foo(x) {
-/*22*/    return A.prototype.foo.call(this, x + 2) + "-sub"; // rewritten super method call
-        }
-      },
-
-      staticMembers: {
-        // public static method:
-        nowPlusOne: function nowPlusOne() {
-/* 8*/    return new Date(B.now.getTime() + 60*60*1000);
+        count: {
+          value: 0,
+          writable: true
         },
-
-        // public static field:
-        now: { value: null, writable: true }
+        foo: function foo(x) {
+          return this.foo$2(x + 2) + "-sub";
+        },
+        foo$2: super$.foo
       },
-
-      staticCode: function() {
-/*25*/    B.now = new Date();
+      staticMembers: {
+        nowPlusOne: function nowPlusOne$static() {
+          return new Date(B.now.getTime() + 60*60*1000);
+        }
       }
-    };
+    }));
+    B.now=( new Date());
   });
 });

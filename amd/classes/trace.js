@@ -1,4 +1,4 @@
-define(["runtime/es5-polyfills"], function() {
+define(["native!Array.prototype.map@runtime/es5-polyfills"], function() {
   "use strict";
   return function trace() {
     var msg = Array.prototype.map.call(arguments, String).join(" ");

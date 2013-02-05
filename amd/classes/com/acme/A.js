@@ -1,59 +1,44 @@
-define(["exports", "runtime/AS3", "./I", "classes/trace"],
-        function($exports,  AS3,     I,           trace) {
+define(["exports","runtime/AS3","classes/com/acme/I","native!String","classes/trace","native!parseInt"], function($exports,AS3,I,String,trace,parseInt) {
   "use strict";
-
-  AS3.class_($exports, function() {
-    // constructor / class:
-    function A(msg/*:String*/) {
-/* 5*/    this.set$msg(msg); // rewritten property set access; in ES5 environments, this.msg = msg works, too.
+  AS3.compilationUnit($exports, function($primaryDeclaration){
+    function A(msg) {
+      this.msg = msg;
     }
-
-    // private method:
-    function secret(n) {
-/*21*/    return this.get$msg() + n; // complemented "this." and rewritten property get access; in ES5 environments, this.msg works, too.
-    }
-
-    return {
-      implements_: I,
+    $primaryDeclaration(AS3.class_({
+      package_: "com.acme",
+      class_: "A",
+      implements_: [I],
       members: {
         constructor: A,
-        // define private field (renamed!) with typed default value:
-        _msg$1: { value: 0, writable: true },
-
-        // property defined through public getter/setter:
+        _msg$1: {
+          value: 0,
+          writable: true
+        },
         msg: {
-          // public getter:
-          get: function get$msg()/*:String*/ {
-/*11*/      return String(this._msg$1); // rewritten private field access
+          get: function msg$get() {
+            return String(this._msg$1);
           },
-          // public setter
-          set: function set$msg(value/*:String*/)/*:void*/ {
-/*17*/      this._msg$1 = parseInt(value, 10) >> 0; // rewritten private field access + int coercion
+          set: function msg$set(value) {
+            this._msg$1 = parseInt(value, 10);
           }
         },
-
-        // public method:
-        foo: function foo(x) {
-/*25*/    return secret.call(this, A.bar(x)); // rewritten private method call
+        secret$1: function secret(n) {
+          return this.msg + n;
         },
-
-        // public method:
+        foo: function foo(x) {
+          return this.secret$1(A.bar(x));
+        },
         baz: function baz() {
-/*29*/    var tmp = AS3.bind(this, secret, "secret$1"); // rewritten method access w/o invocation
-/*30*/    return tmp("-bound");
+          var tmp =AS3.bind( this,"secret$1");
+          return tmp("-bound");
         }
       },
-
       staticMembers: {
-        // public static method:
         bar: function bar(x) {
-/*34*/    return x + 1;
+          return x + 1;
         }
-      },
-
-      staticCode: function() {
-/*14*/  trace("Class A is initialized!");
       }
-    };
+    }));
+    trace("Class A is initialized!");
   });
 });
