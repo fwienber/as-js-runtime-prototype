@@ -1,4 +1,4 @@
-define(["exports","runtime/AS3","classes/com/acme/I","native!String","classes/trace","native!parseInt"], function($exports,AS3,I,String,trace,parseInt) {
+define(["exports","runtime/AS3","classes/com/acme/I","classes/trace"], function($exports,AS3,I,trace) {
   "use strict";
   AS3.compilationUnit($exports, function($primaryDeclaration){
     function A(msg) {

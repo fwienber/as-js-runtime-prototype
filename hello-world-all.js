@@ -420,7 +420,7 @@ define('native',[],function() {
       var variable = parts[0];
       var module = parts[1];
       if (config.isBuild) {
-        if (!module || !config.linkNative) {
+        if (!module || config.linkNative === false) {
           load();
         } else {
           // as it may be needed, always load module and return:
@@ -857,7 +857,7 @@ define('classes/com/acme/I',["exports","runtime/AS3"], function($exports,AS3) {
   });
 });
 
-define('classes/com/acme/A',["exports","runtime/AS3","classes/com/acme/I","native!String","classes/trace","native!parseInt"], function($exports,AS3,I,String,trace,parseInt) {
+define('classes/com/acme/A',["exports","runtime/AS3","classes/com/acme/I","classes/trace"], function($exports,AS3,I,trace) {
   
   AS3.compilationUnit($exports, function($primaryDeclaration){
     function A(msg) {
@@ -919,7 +919,7 @@ define('classes/com/acme/sub/ISub',["exports","runtime/AS3","classes/com/acme/I"
   });
 });
 
-define('classes/com/acme/B',["exports","runtime/AS3","classes/com/acme/A","classes/com/acme/sub/IOther","classes/com/acme/sub/ISub","native!Date","classes/trace"], function($exports,AS3,A,IOther,ISub,Date,trace) {
+define('classes/com/acme/B',["exports","runtime/AS3","classes/com/acme/A","classes/com/acme/sub/IOther","classes/com/acme/sub/ISub","classes/trace"], function($exports,AS3,A,IOther,ISub,trace) {
   
   AS3.compilationUnit($exports, function($primaryDeclaration){
     function B(msg, count) {

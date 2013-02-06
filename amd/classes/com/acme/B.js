@@ -1,4 +1,4 @@
-define(["exports","runtime/AS3","classes/com/acme/A","classes/com/acme/sub/IOther","classes/com/acme/sub/ISub","native!Date","classes/trace"], function($exports,AS3,A,IOther,ISub,Date,trace) {
+define(["exports","runtime/AS3","classes/com/acme/A","classes/com/acme/sub/IOther","classes/com/acme/sub/ISub","classes/trace"], function($exports,AS3,A,IOther,ISub,trace) {
   "use strict";
   AS3.compilationUnit($exports, function($primaryDeclaration){
     function B(msg, count) {
