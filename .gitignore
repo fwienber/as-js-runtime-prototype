@@ -16,5 +16,3 @@ repository-export.xml
 .project
 .settings/
 .DS_Store
-# helper AS files:
-src/*.as
