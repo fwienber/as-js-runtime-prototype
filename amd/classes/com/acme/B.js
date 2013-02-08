@@ -2,8 +2,8 @@ define(["exports","runtime/AS3","classes/com/acme/A","classes/com/acme/sub/IOthe
   "use strict";
   AS3.compilationUnit($exports, function($primaryDeclaration){
     function B(msg, count) {
-      Super.call(this,msg);
       this.barfoo = (A._ || A._$get()).bar(3);
+      Super.call(this,msg);
       this.count = count;
       trace("now: " + B.now);
     }
