@@ -1,4 +1,4 @@
-define(["require", "native!Object.defineProperties@./es5-polyfills"], function(require) {
+define(["native!Object.defineProperties@./es5-polyfills", "native!Object.defineProperty@./es5-polyfills", "native!Object.create@./es5-polyfills"], function(defineProperties, defineProperty, create) {
   "use strict";
   function metaToString() {
     return this.qName;
@@ -30,34 +30,16 @@ define(["require", "native!Object.defineProperties@./es5-polyfills"], function(r
     }
     return result;
   }
-  var metadataHandlers = {};
-  function registerMetadataHandler(handler) {
-    metadataHandlers[handler.metadata] = handler;
-  }
-  function handleMetadata(value) {
-    if (value && value.$class) {
-      var metadata = value.$class.metadata;
-      if (metadata) {
-        for (var key in metadata) {
-          var metadataHandler = metadataHandlers[key];
-          if (metadataHandler) {
-            metadataHandler(value, metadata[key]);
-          }
-        }
-      }
-    }
-    return value;
-  }
   function compilationUnit(exports, definingCode) {
     function getter() {
       var result;
       definingCode(function(value) {
         result = convertShortcut(value);
-        Object.defineProperty(exports, "_", result);
+        defineProperty(exports, "_", result);
       });
-      return handleMetadata(result.value);
+      return result.value;
     }
-    Object.defineProperty(exports, "_", {
+    defineProperty(exports, "_", {
       configurable: true,
       get: getter,
       set: function(value) {
@@ -73,7 +55,7 @@ define(["require", "native!Object.defineProperties@./es5-polyfills"], function(r
         var extends_ = config.extends_ || Object; // super class
         var implements_ = config.implements_ || [];
         // create set of all interfaces implemented by this class
-        var $implements = extends_.$class && extends_.$class.implements_ ? Object.create(extends_.$class.implements_ ) : {};
+        var $implements = extends_.$class && extends_.$class.implements_ ? create(extends_.$class.implements_ ) : {};
         implements_.forEach(function(i) { i.addInterfaces($implements); });
         var staticMembers = convertShortcuts(config.staticMembers);
         // add some meta information under reserved static field "$class":
@@ -87,8 +69,8 @@ define(["require", "native!Object.defineProperties@./es5-polyfills"], function(r
           toString: metaToString
         }};
         staticMembers.toString = { value: toString }; // add Class#toString()
-        Object.defineProperties(clazz, staticMembers);   // add static members
-        clazz.prototype = Object.create(extends_.prototype, members); // establish inheritance prototype chain and add instance members
+        defineProperties(clazz, staticMembers);   // add static members
+        clazz.prototype = create(extends_.prototype, members); // establish inheritance prototype chain and add instance members
         return clazz;
   }
 
@@ -106,8 +88,8 @@ define(["require", "native!Object.defineProperties@./es5-polyfills"], function(r
     config.extends_ && config.extends_.forEach(function (i) {
       i.addInterfaces(interfaces);
     });
-    Object.defineProperties(exports, convertShortcuts({
-      $class: { value: Object.defineProperties({}, convertShortcuts({
+    defineProperties(exports, convertShortcuts({
+      $class: { value: defineProperties({}, convertShortcuts({
         name: config.interface_,
         qName: qName,
         toString: metaToString
@@ -123,7 +105,7 @@ define(["require", "native!Object.defineProperties@./es5-polyfills"], function(r
       return object[boundMethodName];
     }
     var boundMethod = object[boundMethodName].bind(object);
-    Object.defineProperty(object, boundMethodName, {
+    defineProperty(object, boundMethodName, {
       // enumerable: true, // TODO: for debugging only
       value: boundMethod
     });
@@ -144,10 +126,16 @@ define(["require", "native!Object.defineProperties@./es5-polyfills"], function(r
         // fall through!
       case "object":
       case "function":
-        // "type" may be an interface:
-        if (typeof type === "object") {
-          return !!object.constructor.$class &&
-                  type.$class.qName in object.constructor.$class.implements_;
+        // is it an AS3 class or interface?
+        if (type.$class) {
+          // "type" may be an interface:
+          if (type.interfaces) {
+            return !!object.constructor.$class &&
+                    type.$class.qName in object.constructor.$class.implements_;
+          }
+          if (typeof type.$class.isInstance === "function") {
+            return type.$class.isInstance(object);
+          }
         }
         // type is a Class: instanceof returns false negatives in some browsers, so check constructor property, too:
         return object instanceof type || object.constructor === type;
